@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Онбординг — 1С АйтиЛаб</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --yellow:#F5C327;--yellow-hover:#e6b41f;--yellow-light:#F9E080;--yellow-bg:rgba(245,195,39,.08);
+  --black:#1A1A1A;--dark:#2D2D2D;--white:#FFFFFF;--page-bg:#F4F4F2;
+  --gray-body:#666666;--gray-muted:#999999;--gray-border:#E5E5E5;
+  --green:#22c55e;--green-bg:#dcfce7;--red:#ef4444;--red-bg:#fef2f2;
+  --radius:10px;--radius-sm:6px;--radius-tag:4px;
+  --sidebar-w:260px;
+  --transition:all .2s ease;
+  --font:'Manrope',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--page-bg);color:var(--gray-body);line-height:1.7;min-height:100vh;overflow-x:hidden;font-size:14px}
+a{color:var(--yellow-hover);text-decoration:none}
+
+/* ===== HEADER BAR ===== */
+.header-bar{position:fixed;top:0;left:0;right:0;z-index:200;height:52px;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:0.5px solid rgba(255,255,255,.08)}
+.header-left{display:flex;align-items:center;gap:10px}
+.header-logo-icon{width:24px;height:24px;flex-shrink:0}
+.header-logo-text{font-family:var(--font);font-size:15px;color:var(--white);display:flex;align-items:center}
+.header-logo-text .lab{font-weight:800;color:var(--white)}
+.header-logo-text .lab-mark{font-weight:800;color:var(--black);background:var(--yellow);padding:1px 6px;margin-left:1px;border-radius:2px}
+.header-version{font-family:var(--mono);font-size:11px;color:#666;margin-left:12px}
+
+/* ===== LAYOUT ===== */
+.app{display:flex;min-height:100vh;padding-top:52px}
+
+/* ===== SIDEBAR (desktop) ===== */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:0.5px solid var(--gray-border);display:flex;flex-direction:column;position:fixed;top:52px;left:0;bottom:0;z-index:100;overflow:hidden}
+.sidebar-progress{padding:16px 20px;border-bottom:0.5px solid var(--gray-border)}
+.sidebar-progress-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray-muted);margin-bottom:8px;display:flex;justify-content:space-between}
+.sidebar-progress-bar{height:4px;background:var(--gray-border);border-radius:2px;overflow:hidden}
+.sidebar-progress-fill{height:100%;background:var(--yellow);border-radius:2px;transition:width .5s ease;width:0}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sidebar-nav::-webkit-scrollbar{width:3px}
+.sidebar-nav::-webkit-scrollbar-track{background:transparent}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--gray-border);border-radius:2px}
+
+.nav-group-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray-muted);padding:10px 20px 6px;font-weight:500;border-left:2px solid var(--yellow);margin-left:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px 9px 18px;cursor:pointer;transition:var(--transition);font-size:13px;color:var(--gray-body);border-left:2px solid transparent;margin-left:8px;border-radius:0}
+.nav-item:hover{background:var(--yellow-bg);color:var(--black)}
+.nav-item.active{background:var(--yellow-bg);color:var(--black);font-weight:600;border-left-color:var(--yellow)}
+.nav-item.completed .nav-check{background:var(--yellow);border-color:var(--yellow)}
+.nav-item.completed .nav-check svg{opacity:1}
+.nav-check{width:18px;height:18px;border:1.5px solid var(--gray-border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition)}
+.nav-check svg{width:10px;height:10px;opacity:0;transition:var(--transition);color:var(--black)}
+.nav-emoji{font-size:13px}
+.nav-item.test-item{color:var(--gray-muted)}
+.nav-item.test-item.active{color:var(--black);font-weight:600;border-left-color:var(--yellow);background:var(--yellow-bg)}
+.nav-item.test-item.unlocked .nav-check{border-color:var(--yellow);background:var(--yellow-bg)}
+.nav-item.test-item.completed .nav-check{background:var(--green);border-color:var(--green)}
+
+/* ===== MOBILE ===== */
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;z-index:199;height:52px;background:var(--dark);padding:0 16px;border-bottom:0.5px solid rgba(255,255,255,.08)}
+.mobile-top{display:flex;align-items:center;justify-content:space-between;height:100%}
+.mobile-logo{display:flex;align-items:center;gap:8px}
+.mobile-logo-icon{width:24px;height:24px;flex-shrink:0}
+.mobile-logo-text{font-size:15px;font-weight:700;color:var(--white);display:flex;align-items:center}
+.mobile-menu-btn{background:none;border:none;color:var(--white);cursor:pointer;padding:4px;opacity:.7}
+.mobile-menu-btn:hover{opacity:1}
+
+.mobile-nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:210;opacity:0;transition:opacity .3s ease;pointer-events:none}
+.mobile-nav-overlay.show{opacity:1;pointer-events:auto}
+.mobile-nav{position:fixed;top:0;left:-300px;width:280px;bottom:0;background:var(--white);z-index:211;transition:left .3s ease;overflow-y:auto;padding-top:16px;box-shadow:2px 0 12px rgba(0,0,0,.1)}
+.mobile-nav.show{left:0}
+.mobile-nav-header{padding:12px 20px;border-bottom:0.5px solid var(--gray-border);display:flex;justify-content:space-between;align-items:center}
+.mobile-nav-close{background:none;border:none;color:var(--gray-muted);cursor:pointer;font-size:18px;padding:4px}
+
+/* ===== MAIN ===== */
+.main{flex:1;margin-left:var(--sidebar-w);min-height:100vh;display:flex;flex-direction:column}
+.content{flex:1;max-width:780px;width:100%;margin:0 auto;padding:32px 32px 100px}
+
+/* ===== SECTION ===== */
+.section{display:none;animation:fadeIn .3s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.section-part-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray-muted);background:var(--page-bg);padding:5px 12px;border-radius:var(--radius-tag);font-weight:500;margin-bottom:16px;border:0.5px solid var(--gray-border)}
+.section-card{background:var(--white);border:0.5px solid var(--gray-border);border-radius:var(--radius);padding:28px;margin-bottom:24px}
+.section-title{font-size:24px;font-weight:800;color:var(--black);margin-bottom:4px;line-height:1.3}
+.section-body{color:var(--gray-body);font-size:14px}
+.section-body h3{color:var(--black);font-size:15px;font-weight:700;margin:24px 0 10px}
+.section-body h3:first-child{margin-top:0}
+.section-body p{margin-bottom:12px}
+.section-body ul{margin:8px 0 16px 20px}
+.section-body li{margin-bottom:6px}
+.section-body li::marker{color:var(--yellow)}
+.section-body strong{color:var(--black);font-weight:600}
+
+/* ===== CARDS ===== */
+.info-card{background:var(--page-bg);border:0.5px solid var(--gray-border);border-radius:var(--radius);padding:18px;margin:14px 0}
+.info-card-title{font-size:13px;font-weight:600;color:var(--black);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.info-card p,.info-card li{font-size:13px}
+
+.value-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:14px 0}
+.value-item{background:var(--page-bg);border:0.5px solid var(--gray-border);border-radius:var(--radius);padding:14px}
+.value-item-title{font-size:13px;font-weight:600;color:var(--black);margin-bottom:4px}
+.value-item-desc{font-size:12px;color:var(--gray-muted)}
+
+.timeline{position:relative;padding-left:28px;margin:14px 0}
+.timeline::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:1.5px;background:var(--gray-border)}
+.timeline-item{position:relative;margin-bottom:14px}
+.timeline-item::before{content:'';position:absolute;left:-24px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--yellow);border:2px solid var(--white)}
+.timeline-item strong{color:var(--black)}
+
+.kanban-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0}
+.kanban-col{background:var(--page-bg);border:0.5px solid var(--gray-border);border-radius:var(--radius-sm);padding:14px}
+.kanban-col-title{font-size:12px;font-weight:600;margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--gray-border);color:var(--black)}
+.kanban-col.green .kanban-col-title{color:var(--green)}
+.kanban-col.blue .kanban-col-title{color:#3b82f6}
+.kanban-col.orange .kanban-col-title{color:#f59e0b}
+.kanban-col.gray .kanban-col-title{color:var(--gray-muted)}
+.kanban-stage{font-size:12px;color:var(--gray-muted);padding:3px 0}
+
+/* Warning / Alert / Info boxes */
+.warning-box{background:#F9E080;border:0.5px solid rgba(245,195,39,.3);border-radius:var(--radius-sm);padding:12px 14px;margin:14px 0;display:flex;gap:10px;align-items:flex-start}
+.warning-box span:first-child{font-size:14px;flex-shrink:0}
+.warning-box span:last-child{font-size:13px;color:var(--black)}
+
+.alert-box{background:var(--red-bg);border:0.5px solid rgba(239,68,68,.2);border-radius:var(--radius-sm);padding:12px 14px;margin:14px 0;display:flex;gap:10px;align-items:flex-start}
+.alert-box span:first-child{font-size:14px;flex-shrink:0}
+.alert-box span:last-child{font-size:13px;color:var(--red)}
+
+.info-box{background:var(--green-bg);border:0.5px solid rgba(34,197,94,.2);border-radius:var(--radius-sm);padding:12px 14px;margin:14px 0;display:flex;gap:10px;align-items:flex-start}
+.info-box span:first-child{font-size:14px;flex-shrink:0}
+.info-box span:last-child{font-size:13px;color:var(--green)}
+
+.glossary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:14px 0}
+.glossary-item{background:var(--page-bg);border:0.5px solid var(--gray-border);border-radius:var(--radius-sm);padding:10px 12px}
+.glossary-term{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--black)}
+.glossary-desc{font-size:11px;color:var(--gray-muted);margin-top:2px}
+
+/* Tag pills */
+.tag-pill{background:var(--page-bg);padding:4px 12px;border-radius:var(--radius-tag);font-size:12px;color:var(--black);border:0.5px solid var(--gray-border);display:inline-block}
+
+/* ===== ACCORDION ===== */
+.accordion{margin:12px 0}
+.accordion-item{border:0.5px solid var(--gray-border);border-radius:var(--radius-sm);margin-bottom:6px;overflow:hidden;background:var(--white)}
+.accordion-header{padding:13px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--black);transition:var(--transition)}
+.accordion-header:hover{background:var(--page-bg)}
+.accordion-arrow{transition:transform .2s ease;color:var(--gray-muted);font-size:11px}
+.accordion-item.open .accordion-arrow{transform:rotate(180deg)}
+.accordion-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.accordion-item.open .accordion-body{max-height:500px}
+.accordion-content{padding:0 16px 14px;font-size:13px;color:var(--gray-body);line-height:1.6}
+
+/* ===== CHECKLIST ===== */
+.checklist-group{margin-bottom:20px}
+.checklist-day{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--black);margin-bottom:8px;padding:6px 12px;background:var(--yellow-light);border-radius:var(--radius-tag);display:inline-block;letter-spacing:.02em}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--gray-body);cursor:pointer;transition:var(--transition)}
+.checklist-item:hover{color:var(--black)}
+.checklist-cb{width:18px;height:18px;border:1.5px solid var(--gray-border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition)}
+.checklist-item.checked .checklist-cb{background:var(--yellow);border-color:var(--yellow)}
+.checklist-item.checked .checklist-cb::after{content:'\2713';color:var(--black);font-size:11px;font-weight:700}
+.checklist-item.checked{color:var(--gray-muted);text-decoration:line-through}
+
+/* ===== 30-60-90 ===== */
+.adapt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.adapt-card{background:var(--white);border:0.5px solid var(--gray-border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.adapt-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.adapt-card.c30::before{background:var(--yellow)}
+.adapt-card.c60::before{background:#3b82f6}
+.adapt-card.c90::before{background:var(--green)}
+.adapt-days{font-family:var(--mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.adapt-card.c30 .adapt-days{color:var(--yellow-hover)}
+.adapt-card.c60 .adapt-days{color:#3b82f6}
+.adapt-card.c90 .adapt-days{color:var(--green)}
+.adapt-card ul{font-size:12px;list-style:none;margin:0}
+.adapt-card li{padding:4px 0 4px 16px;position:relative;color:var(--gray-body)}
+.adapt-card li::before{content:'\2192';position:absolute;left:0;color:var(--gray-muted);font-size:11px}
+
+/* ===== BOTTOM ACTION BAR ===== */
+.bottom-action{position:fixed;bottom:0;left:var(--sidebar-w);right:0;background:var(--white);border-top:0.5px solid var(--gray-border);padding:14px 32px;display:flex;justify-content:space-between;align-items:center;z-index:50}
+
+/* ===== BUTTONS ===== */
+.btn{padding:10px 24px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:var(--transition);display:inline-flex;align-items:center;gap:8px;font-family:var(--font);letter-spacing:.01em}
+.btn-primary{background:var(--yellow);color:var(--black)}
+.btn-primary:hover{background:var(--yellow-hover)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-secondary{background:transparent;color:var(--black);border:1px solid var(--gray-border)}
+.btn-secondary:hover{border-color:var(--gray-body)}
+.btn-secondary:disabled{opacity:.35;cursor:not-allowed}
+.btn-success{background:var(--green);color:var(--white)}
+.btn-success:hover{background:#16a34a}
+.btn-danger{background:var(--red);color:var(--white)}
+.btn-danger:hover{background:#dc2626}
+.btn-sm{padding:8px 16px;font-size:12px}
+
+/* ===== TEST ===== */
+.test-intro{text-align:center;padding:60px 20px}
+.test-intro-icon{font-size:48px;margin-bottom:16px}
+.test-intro h2{font-size:24px;font-weight:800;color:var(--black);margin-bottom:8px}
+.test-intro p{color:var(--gray-body);font-size:14px;margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto}
+
+.test-question{margin-bottom:32px;animation:fadeIn .2s ease}
+.test-q-num{font-family:var(--mono);font-size:10px;color:var(--gray-muted);font-weight:500;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.test-q-text{font-size:15px;font-weight:600;color:var(--black);margin-bottom:14px}
+.test-options{display:flex;flex-direction:column;gap:8px}
+.test-option{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);font-size:13px;color:var(--gray-body)}
+.test-option:hover{border-color:#ccc;background:var(--page-bg)}
+.test-option.selected{border-color:var(--yellow);background:var(--yellow-bg);color:var(--black);font-weight:500}
+.test-option.correct{border-color:var(--green)!important;background:var(--green-bg)!important;color:var(--green)!important}
+.test-option.wrong{border-color:var(--red)!important;background:var(--red-bg)!important;color:var(--red)!important}
+.test-option-letter{width:28px;height:28px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:var(--transition);font-family:var(--mono);color:var(--gray-muted)}
+.test-option.selected .test-option-letter{border-color:var(--yellow);background:var(--yellow);color:var(--black)}
+.test-option.correct .test-option-letter{border-color:var(--green);background:var(--green);color:var(--white)!important}
+.test-option.wrong .test-option-letter{border-color:var(--red);background:var(--red);color:var(--white)!important}
+
+.test-progress{display:flex;gap:3px;margin-bottom:20px}
+.test-progress-dot{height:4px;background:var(--gray-border);border-radius:2px;transition:var(--transition)}
+.test-progress-dot.answered{background:var(--yellow)}
+.test-progress-dot.current{background:var(--yellow-light)}
+.test-progress-dot.correct-dot{background:var(--green)}
+.test-progress-dot.wrong-dot{background:var(--red)}
+
+/* ===== RESULTS ===== */
+.results{text-align:center;padding:40px 0}
+.results-icon{font-size:64px;margin-bottom:16px;animation:scaleIn .4s ease}
+@keyframes scaleIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.results h2{font-size:28px;font-weight:800;margin-bottom:8px}
+.results-pass{color:var(--yellow-hover)}
+.results-fail{color:var(--red)}
+.results-score{font-size:15px;color:var(--gray-body);margin-bottom:6px}
+.results-percent{font-size:48px;font-weight:800;margin-bottom:24px}
+.results-time{color:var(--gray-muted);font-size:12px;font-family:var(--mono);margin-bottom:32px}
+.results-stats{display:flex;gap:14px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}
+.results-stat{background:var(--page-bg);border:0.5px solid var(--gray-border);border-radius:var(--radius-sm);padding:14px 22px;text-align:center;min-width:110px}
+.results-stat-val{font-size:22px;font-weight:700;color:var(--black)}
+.results-stat-label{font-family:var(--mono);font-size:10px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+.results-wrong{margin-top:24px;text-align:left}
+.results-wrong h3{font-size:15px;font-weight:700;color:var(--black);margin-bottom:12px}
+.results-wrong-item{background:var(--page-bg);border:0.5px solid var(--gray-border);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;font-size:13px}
+.results-wrong-q{color:var(--black);font-weight:600;margin-bottom:6px}
+.results-wrong-a{color:var(--gray-muted)}
+.results-wrong-a span{font-weight:600}
+.results-wrong-a .correct-a{color:var(--green)}
+
+/* ===== CONFETTI ===== */
+.confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden}
+.confetti{position:absolute;top:-10px;width:10px;height:10px;opacity:0}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ===== WELCOME ===== */
+.welcome{text-align:center;padding:60px 20px;animation:fadeIn .4s ease}
+.welcome-icon{font-size:56px;margin-bottom:16px}
+.welcome h1{font-size:28px;font-weight:800;color:var(--black);margin-bottom:8px}
+.welcome p{color:var(--gray-body);font-size:14px;max-width:460px;margin:0 auto 32px;line-height:1.7}
+.welcome-stats{display:flex;gap:24px;justify-content:center;margin-bottom:36px;flex-wrap:wrap}
+.welcome-stat{text-align:center}
+.welcome-stat-val{font-size:28px;font-weight:800;color:var(--yellow-hover)}
+.welcome-stat-label{font-family:var(--mono);font-size:10px;color:var(--gray-muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+/* ===== EOD CODE BLOCK ===== */
+.eod-block{background:var(--black);border-radius:var(--radius-sm);padding:12px 16px;font-family:var(--mono);font-size:12px;line-height:1.8;color:#e0e0e0}
+.eod-block strong{color:var(--yellow);font-weight:500}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .mobile-header{display:flex;align-items:center}
+  .main{margin-left:0}
+  .bottom-action{left:0;padding:12px 16px}
+  .content{padding:24px 16px 100px}
+  .section-title{font-size:20px}
+  .adapt-grid{grid-template-columns:1fr}
+  .kanban-columns{grid-template-columns:1fr 1fr}
+  .value-grid{grid-template-columns:1fr 1fr}
+  .results-stats{flex-direction:column;align-items:center}
+  .mobile-nav-overlay{display:block}
+}
+@media(max-width:480px){
+  .kanban-columns{grid-template-columns:1fr}
+  .glossary-grid{grid-template-columns:1fr}
+  .value-grid{grid-template-columns:1fr}
+  .welcome h1{font-size:22px}
+}
+
+/* ===== PRINT ===== */
+@media print{
+  .sidebar,.mobile-header,.bottom-action,.header-bar,.btn{display:none!important}
+  .main{margin-left:0!important;padding-top:0!important}
+  .content{padding:20px!important;max-width:100%!important}
+  body{background:#fff!important;color:#111!important}
+  .section-card{box-shadow:none!important;border:1px solid #ddd!important}
+  .results-percent{color:#111!important}
+  .results-wrong-item{border-color:#ddd!important;background:#f9f9f9!important}
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gray-border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#ccc}
+</style>
+</head>
+<body>
+
+<!-- HEADER BAR -->
+<div class="header-bar">
+  <div class="header-left">
+    <svg class="header-logo-icon" viewBox="0 0 48 48" fill="none">
+      <rect width="22" height="22" fill="#F5C327"/>
+      <rect x="26" y="26" width="22" height="22" fill="#F5C327"/>
+      <rect x="26" y="0" width="22" height="22" fill="#444"/>
+      <polygon points="10,36 38,12 38,22 26,22 26,34" fill="#fff"/>
+    </svg>
+    <div class="header-logo-text">
+      <span class="lab">АЙТИ</span><span class="lab-mark">ЛАБ</span>
+    </div>
+    <span class="header-version">Брендбук v1.0</span>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <!-- Sidebar (desktop) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-progress">
+      <div class="sidebar-progress-label">
+        <span>Прогресс</span>
+        <span id="progressText">0 из 14</span>
+      </div>
+      <div class="sidebar-progress-bar">
+        <div class="sidebar-progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+  </aside>
+
+  <!-- Mobile Header -->
+  <div class="mobile-header" id="mobileHeader">
+    <div class="mobile-top">
+      <div class="mobile-logo">
+        <svg class="mobile-logo-icon" viewBox="0 0 48 48" fill="none">
+          <rect width="22" height="22" fill="#F5C327"/>
+          <rect x="26" y="26" width="22" height="22" fill="#F5C327"/>
+          <rect x="26" y="0" width="22" height="22" fill="#444"/>
+          <polygon points="10,36 38,12 38,22 26,22 26,34" fill="#fff"/>
+        </svg>
+        <span class="mobile-logo-text">АЙТИ<span style="font-weight:800;color:var(--black);background:var(--yellow);padding:1px 6px;margin-left:1px;border-radius:2px">ЛАБ</span></span>
+      </div>
+      <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h16M3 11h16M3 16h16"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+  <div class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav-header">
+      <span style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray-muted)">Навигация</span>
+      <button class="mobile-nav-close" onclick="toggleMobileNav()">&#10005;</button>
+    </div>
+    <nav id="mobileSidebarNav" style="padding:4px 0"></nav>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="content" id="contentArea"></div>
+    <div class="bottom-action" id="bottomAction" style="display:none"></div>
+  </main>
+</div>
+
+<script>
+// ========== DATA ==========
+const SECTIONS = [
+  {id:'s1',num:1,part:1,emoji:'\u{1F3E2}',title:'О компании',short:'О компании'},
+  {id:'s2',num:2,part:1,emoji:'\u{1F465}',title:'Команда и роли',short:'Команда и роли'},
+  {id:'s3',num:3,part:1,emoji:'\u{1F680}',title:'Клиентский портфель',short:'Клиенты'},
+  {id:'s4',num:4,part:1,emoji:'\u{1F6E0}',title:'Технологический стек',short:'Тех. стек'},
+  {id:'s5',num:5,part:2,emoji:'\u{1F4CB}',title:'Управление задачами',short:'Задачи'},
+  {id:'s6',num:6,part:2,emoji:'\u23F1',title:'Трекинг времени',short:'Время'},
+  {id:'s7',num:7,part:2,emoji:'\u{1F5E3}',title:'Коммуникация',short:'Коммуникация'},
+  {id:'s8',num:8,part:2,emoji:'\u{1F916}',title:'ИИ-инструменты',short:'ИИ'},
+  {id:'s9',num:9,part:3,emoji:'\u{1F512}',title:'Инфраструктура и безопасность',short:'Инфраструктура'},
+  {id:'s10',num:10,part:3,emoji:'\u{1F4B0}',title:'Финансы',short:'Финансы'},
+  {id:'s11',num:11,part:3,emoji:'\u{1F4D6}',title:'Глоссарий',short:'Глоссарий'},
+  {id:'s12',num:12,part:4,emoji:'\u2753',title:'FAQ',short:'FAQ'},
+  {id:'s13',num:13,part:4,emoji:'\u2705',title:'Чек-лист первой недели',short:'Чек-лист'},
+  {id:'s14',num:14,part:4,emoji:'\u{1F4C8}',title:'План адаптации 30-60-90',short:'Адаптация'},
+];
+
+const PART_NAMES = {1:'ОРГАНИЗАЦИЯ',2:'ПРОЦЕССЫ',3:'ИНФРАСТРУКТУРА И СРЕДА',4:'ОНБОРДИНГ'};
+
+const QUESTIONS = [
+  {q:'В каком году основана 1С АйтиЛаб?',opts:['2010','2014','2018'],ans:1},
+  {q:'Кто основатель компании?',opts:['Александр М.','Константин С.','Владимир Макаров'],ans:2},
+  {q:'В каком формате работает компания?',opts:['Офис','Гибрид','Полностью удалённый'],ans:2},
+  {q:'Какая основная IDE для разработки?',opts:['VS Code','Cursor','WebStorm'],ans:1},
+  {q:'Сколько стадий на канбан-доске в Bitrix24?',opts:['7','9','11'],ans:2},
+  {q:'Что такое EOD?',opts:['End of Day — ежедневный отчёт','End of Design — прототип','Extra Output Data'],ans:0},
+  {q:'Что означает DOR?',opts:['Definition of Ready','Definition of Result','Document of Requirements'],ans:0},
+  {q:'Что означает DOD?',opts:['Data Output Design','Definition of Done','Direct Object Delivery'],ans:1},
+  {q:'Через какой канал ведётся основная коммуникация?',opts:['Email','Slack','Telegram'],ans:2},
+  {q:'Что такое NDA Gateway?',opts:['VPN для клиентов','Шлюз шифрования данных для LLM','Файлообменник'],ans:1},
+  {q:'Какой контур для экспериментов и тестирования?',opts:['Prod','Demo','Staging'],ans:1},
+  {q:'Сколько дней отпуска в году?',opts:['20','24','28'],ans:2},
+  {q:'Что такое Vibe Coding?',opts:['Кодогенерация через ИИ по описанию на языке','Рапид-программирование','Код без тестирования'],ans:0},
+  {q:'Основная отраслевая специализация компании?',opts:['Финансы','Торговля и ритейл','Здравоохранение'],ans:1},
+  {q:'Какая самая частая конфигурация 1С у клиентов?',opts:['БП','ЗУП','УТ'],ans:2},
+  {q:'Через что осуществляется доступ к рабочим серверам?',opts:['VPN','SSH','RDP'],ans:2},
+  {q:'Как часто нужно отправлять EOD-отчёт?',opts:['Раз в неделю','Каждый день','По запросу'],ans:1},
+  {q:'Что НЕЛЬЗЯ делать с клиентскими данными?',opts:['Хранить на серверах','Отправлять в открытые LLM без шифрования','Использовать через NDA Gateway'],ans:1},
+  {q:'Через что ведётся документация и база знаний?',opts:['Google Docs','Confluence','Notion'],ans:2},
+  {q:'Сколько частей в Welcome Book?',opts:['2','3','4'],ans:2},
+];
+
+// ========== STATE ==========
+let state = {
+  currentView:'welcome',
+  currentSection:0,
+  completed:[],
+  testAnswers:{},
+  testStarted:false,
+  testFinished:false,
+  testScore:0,
+  testTime:0,
+  testStartTime:null,
+  testCurrentQ:0,
+  checklistState:{},
+};
+
+function loadState(){
+  try{var s=localStorage.getItem('onboarding-aytilab-brand');if(s){var p=JSON.parse(s);state=Object.assign({},state,p);}}catch(e){}
+}
+function saveState(){
+  try{localStorage.setItem('onboarding-aytilab-brand',JSON.stringify(state));}catch(e){}
+}
+
+// ========== NAVIGATION ==========
+function navigate(view,sectionIndex){
+  if(view==='section'){state.currentView='section';state.currentSection=sectionIndex!==undefined?sectionIndex:state.currentSection;}
+  else if(view==='welcome'){state.currentView='welcome';}
+  else if(view==='test'){if(state.completed.length<14)return;state.currentView='test';if(!state.testStarted){state.testStarted=true;state.testStartTime=Date.now();state.testAnswers={};state.testCurrentQ=0;}}
+  else if(view==='results'){state.currentView='results';}
+  saveState();render();window.scrollTo(0,0);
+}
+
+function toggleMobileNav(){
+  var o=document.getElementById('mobileOverlay'),n=document.getElementById('mobileNav');
+  o.classList.toggle('show');n.classList.toggle('show');
+}
+
+// ========== ACTIONS ==========
+function markRead(){
+  var sec=SECTIONS[state.currentSection];
+  if(!state.completed.includes(sec.id)){state.completed.push(sec.id);saveState();}
+  if(state.currentSection<SECTIONS.length-1){state.currentSection++;saveState();render();window.scrollTo(0,0);}
+  else{navigate('test');}
+}
+function prevSection(){
+  if(state.currentSection>0){state.currentSection--;saveState();render();window.scrollTo(0,0);}
+}
+function selectAnswer(qIdx,optIdx){state.testAnswers[qIdx]=optIdx;saveState();render();}
+function nextQuestion(){
+  if(state.testAnswers[state.testCurrentQ]===undefined)return;
+  if(state.testCurrentQ<QUESTIONS.length-1){state.testCurrentQ++;saveState();render();window.scrollTo(0,0);}
+  else{finishTest();}
+}
+function prevQuestion(){
+  if(state.testCurrentQ>0){state.testCurrentQ--;saveState();render();window.scrollTo(0,0);}
+}
+function finishTest(){
+  var score=0;QUESTIONS.forEach(function(q,i){if(state.testAnswers[i]===q.ans)score++;});
+  state.testScore=score;state.testTime=Date.now()-state.testStartTime;state.testFinished=true;state.testStarted=false;saveState();navigate('results');
+}
+function retryTest(){
+  state.testAnswers={};state.testStarted=false;state.testFinished=false;state.testScore=0;state.testTime=0;state.testStartTime=null;state.testCurrentQ=0;saveState();navigate('test');
+}
+function toggleCheckItem(key){state.checklistState[key]=!state.checklistState[key];saveState();render();}
+function resetAll(){
+  if(confirm('Сбросить весь прогресс? Это действие нельзя отменить.')){
+    localStorage.removeItem('onboarding-aytilab-brand');
+    state={currentView:'welcome',currentSection:0,completed:[],testAnswers:{},testStarted:false,testFinished:false,testScore:0,testTime:0,testStartTime:null,testCurrentQ:0,checklistState:{}};
+    render();
+  }
+}
+
+// ========== RENDER ==========
+function render(){renderSidebar();renderContent();renderBottomAction();}
+
+function renderSidebar(){
+  var c=state.completed.length,pct=c/14*100;
+  document.getElementById('progressText').textContent=c+' из 14';
+  document.getElementById('progressFill').style.width=pct+'%';
+
+  var html='';var lastPart=0;
+  SECTIONS.forEach(function(sec,i){
+    if(sec.part!==lastPart){
+      lastPart=sec.part;
+      html+='<div class="nav-group-title">\u0427\u0410\u0421\u0422\u042C '+sec.part+'. '+PART_NAMES[sec.part]+'</div>';
+    }
+    var isC=state.completed.includes(sec.id),isA=state.currentView==='section'&&state.currentSection===i;
+    var cls='nav-item';if(isA)cls+=' active';if(isC)cls+=' completed';
+    html+='<div class="'+cls+'" onclick="navigate(\'section\','+i+')"><div class="nav-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div><span class="nav-emoji">'+sec.emoji+'</span><span>'+sec.short+'</span></div>';
+  });
+
+  var allDone=state.completed.length>=14,testC=state.testFinished;
+  var testCls='nav-item test-item';
+  if(state.currentView==='test')testCls+=' active';if(allDone)testCls+=' unlocked';if(testC)testCls+=' completed';
+  html+='<div class="nav-group-title" style="margin-top:12px">\u0424\u0418\u041D\u0410\u041B\u042C\u041D\u042B\u0419 \u0422\u0415\u0421\u0422</div>';
+  html+='<div class="'+testCls+'" onclick="'+(allDone?"navigate('test')":'')+'"><div class="nav-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div><span class="nav-emoji">\u{1F4DD}</span><span>Тест (20 вопросов)</span></div>';
+
+  document.getElementById('sidebarNav').innerHTML=html;
+  document.getElementById('mobileSidebarNav').innerHTML=html;
+}
+
+function renderContent(){
+  var area=document.getElementById('contentArea');
+  if(state.currentView==='welcome')area.innerHTML=renderWelcome();
+  else if(state.currentView==='section')area.innerHTML=getSectionHTML(state.currentSection);
+  else if(state.currentView==='test')area.innerHTML=renderTest();
+  else if(state.currentView==='results')area.innerHTML=renderResults();
+}
+
+function renderBottomAction(){
+  var bar=document.getElementById('bottomAction');
+  if(state.currentView==='welcome'){
+    bar.style.display='flex';
+    bar.innerHTML='<div></div><button class="btn btn-primary" onclick="navigate(\'section\',0)">Начать ознакомление \u2192</button>';
+  }else if(state.currentView==='section'){
+    var sec=SECTIONS[state.currentSection],isC=state.completed.includes(sec.id),isLast=state.currentSection===SECTIONS.length-1;
+    bar.style.display='flex';
+    bar.innerHTML='<button class="btn btn-secondary" onclick="prevSection()" '+(state.currentSection===0?'disabled':'')+'>\u2190 \u041D\u0430\u0437\u0430\u0434</button><button class="btn '+(isC?'btn-success':'btn-primary')+'" onclick="markRead()">'+(isC?'\u2713 \u041E\u0437\u043D\u0430\u043A\u043E\u043C\u043B\u0435\u043D':(isLast?'\u041E\u0437\u043D\u0430\u043A\u043E\u043C\u0438\u0442\u044C\u0441\u044F \u0438 \u043F\u0435\u0440\u0435\u0439\u0442\u0438 \u043A \u0442\u0435\u0441\u0442\u0443':'\u041E\u0437\u043D\u0430\u043A\u043E\u043C\u0438\u043B\u0441\u044F \u2192'))+'</button>';
+  }else if(state.currentView==='test'){
+    bar.style.display='flex';var qIdx=state.testCurrentQ||0,isLast=qIdx===QUESTIONS.length-1;
+    bar.innerHTML='<button class="btn btn-secondary" onclick="prevQuestion()" '+(qIdx===0?'disabled':'')+'>\u2190 \u041D\u0430\u0437\u0430\u0434</button><button class="btn btn-primary" onclick="'+(isLast?'finishTest()':'nextQuestion()')+'" '+(state.testAnswers[qIdx]===undefined?'disabled':'')+'>'+(isLast?'\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044C \u0442\u0435\u0441\u0442':'\u0414\u0430\u043B\u0435\u0435 \u2192')+'</button>';
+  }else if(state.currentView==='results'){
+    var passed=state.testScore>=16;bar.style.display='flex';
+    bar.innerHTML=passed?'<div></div><button class="btn btn-secondary" onclick="resetAll()">Начать заново</button>':'<div></div><div style="display:flex;gap:10px"><button class="btn btn-secondary" onclick="resetAll()">Сбросить прогресс</button><button class="btn btn-danger" onclick="retryTest()">Попробовать снова</button></div>';
+  }else{bar.style.display='none';}
+}
+
+function renderWelcome(){
+  return '<div class="welcome"><div class="welcome-icon">\u{1F680}</div><h1>\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 1\u0421 \u0410\u0439\u0442\u0438\u041B\u0430\u0431!</h1><p>\u042D\u0442\u043E\u0442 \u0438\u043D\u0442\u0435\u0440\u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0439 Welcome Book \u043F\u043E\u0437\u043D\u0430\u043A\u043E\u043C\u0438\u0442 \u0432\u0430\u0441 \u0441 \u043A\u043E\u043C\u043F\u0430\u043D\u0438\u0435\u0439, \u043F\u0440\u043E\u0446\u0435\u0441\u0441\u0430\u043C\u0438, \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u043C\u0438 \u0438 \u043F\u0440\u0430\u0432\u0438\u043B\u0430\u043C\u0438 \u0440\u0430\u0431\u043E\u0442\u044B. \u041E\u0437\u043D\u0430\u043A\u043E\u043C\u044C\u0442\u0435\u0441\u044C \u0441\u043E \u0432\u0441\u0435\u043C\u0438 \u0440\u0430\u0437\u0434\u0435\u043B\u0430\u043C\u0438 \u0438 \u043F\u0440\u043E\u0439\u0434\u0438\u0442\u0435 \u0444\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u0442\u0435\u0441\u0442.</p><div class="welcome-stats"><div class="welcome-stat"><div class="welcome-stat-val">4</div><div class="welcome-stat-label">\u0427\u0430\u0441\u0442\u0438</div></div><div class="welcome-stat"><div class="welcome-stat-val">14</div><div class="welcome-stat-label">\u0420\u0430\u0437\u0434\u0435\u043B\u043E\u0432</div></div><div class="welcome-stat"><div class="welcome-stat-val">20</div><div class="welcome-stat-label">\u0412\u043E\u043F\u0440\u043E\u0441\u043E\u0432</div></div></div><button class="btn btn-primary" onclick="navigate(\'section\',0)" style="font-size:15px;padding:14px 36px">\u041D\u0430\u0447\u0430\u0442\u044C \u043E\u0437\u043D\u0430\u043A\u043E\u043C\u043B\u0435\u043D\u0438\u0435 \u2192</button></div>';
+}
+
+// ========== SECTION CONTENT ==========
+function getSectionHTML(idx){
+  var sec=SECTIONS[idx];
+  return '<div class="section-card"><div class="section active"><div class="section-part-badge">\u0427\u0430\u0441\u0442\u044C '+sec.part+' \u2014 '+PART_NAMES[sec.part]+'</div><h1 class="section-title">'+sec.emoji+' '+sec.title+'</h1><div class="section-body">'+getSectionContent(idx)+'</div></div></div>';
+}
+
+function getSectionContent(idx){
+  switch(idx){case 0:return s1();case 1:return s2();case 2:return s3();case 3:return s4();case 4:return s5();case 5:return s6();case 6:return s7();case 7:return s8();case 8:return s9();case 9:return s10();case 10:return s11();case 11:return s12();case 12:return s13();case 13:return s14();default:return '';}
+}
+
+function s1(){
+  return '<h3>Кто мы</h3><p><strong>1С АйтиЛаб</strong> — IT-компания, основанная в 2014 году Владимиром Макаровым. Основной профиль — заказная разработка, внедрение и сопровождение решений на платформе 1С:Предприятие. За 10+ лет работы команда реализовала сотни проектов для бизнеса различного масштаба.</p><p>С 2024 года компания активно трансформируется в <strong>AI-oriented инженерную организацию</strong>. Мы внедряем Vibe Coding, автоматизируем рутинные процессы с помощью LLM и разрабатываем собственные инструменты на базе ИИ.</p><h3>Миссия и ценности</h3><p>Миссия — <strong>автоматизировать бизнес-процессы клиентов максимально эффективно, используя современные технологии.</strong></p><div class="value-grid"><div class="value-item"><div class="value-item-title">\u{1F3AF} Качество</div><div class="value-item-desc">Мы отвечаем за результат</div></div><div class="value-item"><div class="value-item-title">\u{1F4AC} Прозрачность</div><div class="value-item-desc">Открытая коммуникация с клиентом</div></div><div class="value-item"><div class="value-item-title">\u{1F4DA} Непрерывное обучение</div><div class="value-item-desc">Постоянно изучаем новое</div></div><div class="value-item"><div class="value-item-title">\u26A1 Автоматизация всего</div><div class="value-item-desc">Если задачу можно автоматизировать, мы её автоматизируем</div></div></div><h3>История</h3><div class="timeline"><div class="timeline-item"><strong>2014</strong> — Начало работы</div><div class="timeline-item"><strong>2016\u20132018</strong> — Расширение клиентской базы</div><div class="timeline-item"><strong>2019\u20132021</strong> — Масштабирование и ERP</div><div class="timeline-item"><strong>2022\u20132023</strong> — Стандартизация, Bitrix24, удалёнка</div><div class="timeline-item"><strong>2024\u20132025</strong> — AI-трансформация</div></div><h3>Формат работы</h3><div class="info-card"><div class="info-card-title">\u{1F5A5} Полностью удалённый</div><ul><li><strong>RDP</strong> для рабочих окружений</li><li><strong>Telegram</strong> для коммуникации</li><li><strong>Bitrix24</strong> для задач</li><li><strong>Notion</strong> для документации</li></ul></div><div class="alert-box"><span>\u26A0\uFE0F</span><span>Все рабочие окружения на закрытых серверах. Данные клиентов не копируются на локальные устройства.</span></div>';
+}
+
+function s2(){
+  return '<h3>Роли в команде</h3><div class="info-card"><div class="info-card-title">\u{1F454} Руководитель / Основатель</div><p><strong>Владимир Макаров</strong> — стратегия, клиенты, архитектура, контроль качества</p></div><div class="info-card"><div class="info-card-title">\u{1F4CB} Руководитель проектов (PM)</div><p>Планирование, координация, коммуникация с клиентом, управление рисками</p></div><div class="info-card"><div class="info-card-title">\u{1F4BB} 1С-разработчик</div><p>Разработка конфигураций 1С, интеграции, Cursor + Claude, тестирование, трекинг времени, EOD-отчёты</p></div><h3>Как взаимодействуем</h3><div class="info-card"><ul><li><strong>Асинхронная коммуникация</strong> — основной формат</li><li><strong>Реакция</strong> в течение 2\u20134 часов</li><li>Статус-звонки по необходимости (10\u201315 минут)</li></ul></div><div class="warning-box"><span>\u26A1</span><span>Если блокер — <strong>сразу пиши в общий чат</strong></span></div>';
+}
+
+function s3(){
+  return '<h3>Обзор</h3><p>У компании <strong>10+ активных клиентов</strong>. Две основные модели работы: проектная и абонентское сопровождение (SLA).</p><h3>Масштаб клиентов</h3><div class="value-grid"><div class="value-item"><div class="value-item-title">\u{1F3E2} Малый бизнес</div><div class="value-item-desc">До 50 чел. УТ, БП</div></div><div class="value-item"><div class="value-item-title">\u{1F3ED} Средний бизнес</div><div class="value-item-desc">50\u2013300 чел. Комплексные внедрения</div></div><div class="value-item"><div class="value-item-title">\u{1F3D7} Крупный бизнес</div><div class="value-item-desc">300+ чел. ERP</div></div></div><h3>Отрасли</h3><ul><li><strong>Торговля и ритейл</strong> — основная специализация</li><li>Производство</li><li>Сервисные компании</li></ul><h3>Основные конфигурации</h3><div class="info-card"><div class="info-card-title">\u{1F4E6} 1С конфигурации</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">' + ['\u0423\u0422 10.3','\u0423\u0422 11.5','\u0411\u041F 3.0','\u0417\u0423\u041F 3.1','ERP 2','\u0423\u041D\u0424','\u0414\u041E'].map(function(c){return '<span class="tag-pill">'+c+'</span>';}).join('') + '</div></div><div class="alert-box"><span>\u{1F512}</span><span><strong>NDA:</strong> вся информация о клиентах конфиденциальна</span></div>';
+}
+
+function s4(){
+  return '<h3>1С:Предприятие</h3><div class="info-card"><ul><li>1С:Предприятие 8.3</li><li>Конфигуратор</li><li>Управляемые формы</li><li>Расширения</li><li>Внешние обработки</li></ul></div><h3>Интеграции</h3><div class="info-card"><ul><li>HTTP-сервисы, WS-ссылки, COM-объекты</li><li>Telegram Bot API</li><li>JSON / XML</li><li>Bitrix24 REST API</li></ul></div><h3>Инфраструктура</h3><div class="info-card"><div style="display:flex;flex-wrap:wrap;gap:8px">' + ['Windows Server','RDP','VPS','Git','Docker'].map(function(t){return '<span class="tag-pill">'+t+'</span>';}).join('') + '</div></div><h3>Инструменты</h3><div class="info-card"><ul><li><strong>Cursor</strong> — основная IDE</li><li><strong>1С:Конфигуратор</strong></li><li><strong>Claude</strong>, GPT-4 — ИИ-ассистенты</li><li><strong>Bitrix24</strong>, <strong>Notion</strong></li></ul></div><h3>Направления развития</h3><div class="value-grid"><div class="value-item"><div class="value-item-title">\u{1F310} WEB</div><div class="value-item-desc">React, Node.js</div></div><div class="value-item"><div class="value-item-title">\u{1F9E0} AI/ML</div><div class="value-item-desc">Vibe Coding, Prompt Engineering</div></div><div class="value-item"><div class="value-item-title">\u{1F4DE} Омниканальные</div><div class="value-item-desc">Коммуникации</div></div><div class="value-item"><div class="value-item-title">\u26A1 Low-Code</div><div class="value-item-desc">Автоматизация</div></div></div>';
+}
+
+function s5(){
+  return '<h3>Система управления</h3><p>Используется <strong>Bitrix24</strong> (тариф Standard) — основной инструмент для управления задачами и проектами.</p><h3>Канбан — 11 стадий</h3><div class="kanban-columns"><div class="kanban-col green"><div class="kanban-col-title">\u{1F7E2} Входящие</div><div class="kanban-stage">\u2022 Новая заявка</div><div class="kanban-stage">\u2022 Аналитика</div></div><div class="kanban-col blue"><div class="kanban-col-title">\u{1F535} Работа</div><div class="kanban-stage">\u2022 Планирование</div><div class="kanban-stage">\u2022 В работе</div><div class="kanban-stage">\u2022 Тестирование</div></div><div class="kanban-col orange"><div class="kanban-col-title">\u{1F7E0} Доставка</div><div class="kanban-stage">\u2022 Установка у клиента</div><div class="kanban-stage">\u2022 Приёмка клиентом</div><div class="kanban-stage">\u2022 Доработка</div></div><div class="kanban-col gray"><div class="kanban-col-title">\u26AA Завершение</div><div class="kanban-stage">\u2022 Завершена</div><div class="kanban-stage">\u2022 Отменена</div></div></div><h3>DOR — Definition of Ready</h3><div class="info-box"><span>\u{1F4CB}</span><span>Описание понятно, критерии приёмки определены, нет блокеров</span></div><h3>DOD — Definition of Done</h3><div class="info-box"><span>\u2705</span><span>Код написан и проверен, самотестирование пройдено, задача в \u00ABЗавершена\u00BB, EOD обновлён</span></div>';
+}
+
+function s6(){
+  return '<h3>Обязательный таймер</h3><p>В Bitrix24 есть <strong>обязательный таймер</strong> по каждой задаче. Его использование обязательно для всех разработчиков.</p><h3>Правила трекинга</h3><div class="info-card"><ul><li>\u2705 Включать при начале работы над задачей</li><li>\u2705 Останавливать при переключении на другую задачу</li><li>\u274C Не оставлять включённым на ночь</li></ul></div><h3>Что учитывается</h3><div class="value-grid"><div class="value-item" style="border-left:3px solid var(--green)"><div class="value-item-title" style="color:var(--green)">\u2705 Учитывается</div><div class="value-item-desc">Разработка, тестирование, аналитика, коммуникация, установка</div></div><div class="value-item" style="border-left:3px solid var(--red)"><div class="value-item-title" style="color:var(--red)">\u274C Не учитывается</div><div class="value-item-desc">Обед, технические перерывы, личное время</div></div></div>';
+}
+
+function s7(){
+  return '<h3>Каналы коммуникации</h3><div class="info-card"><div class="info-card-title">\u{1F4AC} Telegram</div><p>Общий чат, чаты по проектам, личные сообщения, EOD-бот</p></div><div class="info-card"><div class="info-card-title">\u{1F4CB} Bitrix24</div><p>Комментарии к задачам, статусы</p></div><div class="info-card"><div class="info-card-title">\u{1F4D6} Notion</div><p>Welcome Book, архитектура проектов, протоколы</p></div><h3>EOD-отчёт</h3><div class="info-card"><div class="info-card-title">\u{1F4DD} Ежедневный отчёт через Telegram-бота</div><p style="margin-bottom:6px">Формат:</p><div class="eod-block"><strong>Что сделал</strong> \u2192 ...<br><strong>Что планирую</strong> \u2192 ...<br><strong>Блокеры</strong> \u2192 ...</div></div><h3>Правила</h3><ul><li>Писать <strong>чётко и по делу</strong></li><li>Упоминать <strong>задачу</strong> из Bitrix24</li><li>Реагировать <strong>2\u20134 часа</strong></li><li><strong>Не пересылать клиентские данные</strong></li></ul>';
+}
+
+function s8(){
+  return '<h3>Философия</h3><p><strong>ИИ = инструмент, не замена.</strong></p><p><strong>Vibe Coding:</strong> описать задачу \u2192 ИИ генерирует \u2192 проверить \u2192 внедрить. Скорость x2\u20135.</p><h3>Инструменты</h3><div class="info-card"><div class="info-card-title">\u{1F5A5} Cursor</div><p>Основная IDE (VS Code + ИИ)</p></div><div class="info-card"><div class="info-card-title">\u{1F9E0} Claude (Anthropic)</div><p>Основной LLM для сложных задач</p></div><div class="info-card"><div class="info-card-title">\u{1F916} GPT-4</div><p>Дополнительный ассистент</p></div><h3>Собственные решения</h3><div class="value-grid"><div class="value-item"><div class="value-item-title">\u{1F916} EOD-бот</div><div class="value-item-desc">Telegram-бот для отчётов</div></div><div class="value-item"><div class="value-item-title">\u{1F512} NDA Gateway</div><div class="value-item-desc">Шифрование данных для LLM</div></div><div class="value-item"><div class="value-item-title">\u{1F517} Prompt Chaining</div><div class="value-item-desc">Цепочки промптов</div></div></div><div class="alert-box"><span>\u{1F6AB}</span><span><strong>НИКОГДА не отправлять</strong> реальные данные клиентов без шифрования через NDA Gateway</span></div>';
+}
+
+function s9(){
+  return '<h3>Контуры</h3><div class="value-grid"><div class="value-item" style="border-left:3px solid var(--green)"><div class="value-item-title" style="color:var(--green)">\u{1F9EA} Demo-контур</div><div class="value-item-desc">Для разработки и тестирования</div></div><div class="value-item" style="border-left:3px solid var(--red)"><div class="value-item-title" style="color:var(--red)">\u{1F510} Prod-контур</div><div class="value-item-desc">Для реальных данных клиентов (максимальная осторожность)</div></div></div><h3>Доступы</h3><p>Все доступы выдаются при онбординге:</p><ul><li><strong>RDP</strong> — к рабочим серверам</li><li><strong>Bitrix24</strong> — к системе задач</li><li><strong>Notion</strong> — к документации</li><li><strong>Telegram</strong> — к чатам и ботам</li></ul><h3>Безопасность</h3><div class="info-card"><ul><li>\u{1F512} Подписание <strong>NDA</strong></li><li>\u{1F4BE} Данные клиентов <strong>не копируются</strong> локально</li><li>\u{1F4F8} Скриншоты только <strong>в рамках работы</strong></li><li>\u{1F916} LLM только <strong>через NDA Gateway</strong></li></ul></div><h3>NDA Gateway</h3><div class="info-card"><p><strong>Собственная разработка</strong> компании. Шифрует данные перед отправкой в LLM, обеспечивая защиту конфиденциальной информации клиентов.</p></div>';
+}
+
+function s10(){
+  return '<h3>Модели работы с клиентами</h3><div class="info-card"><div class="info-card-title">\u{1F4DD} Проектная модель</div><p>КП с фиксированной стоимостью, оплата в 2\u20134 этапа</p></div><div class="info-card"><div class="info-card-title">\u23F0 Повременная модель</div><p>Почасовая оплата, отчёт из Bitrix24</p></div><div class="info-card"><div class="info-card-title">\u{1F504} Абонентское сопровождение</div><p>SLA с ежемесячной оплатой, квота часов</p></div><h3>Документооборот</h3><ul><li>Договор, акт, счёт — через <strong>ЭДО</strong></li></ul><h3>Сотрудникам</h3><div class="info-card"><ul><li>Трудовой договор / ГПХ через <strong>ЭДО</strong></li><li>Оплата <strong>2 раза в месяц</strong></li><li>Отпуск <strong>28 дней</strong></li></ul></div>';
+}
+
+function s11(){
+  var terms=[
+    ['1С:Предприятие','Платформа для автоматизации бизнеса'],
+    ['Конфигурация','Приложение на базе 1С'],
+    ['Конфигуратор','Среда разработки 1С'],
+    ['Расширение','Дополнение к конфигурации без изменения исходного кода'],
+    ['УФ','Управляемые формы'],
+    ['EP','Event Processor (обработчик событий)'],
+    ['ERF','External Report/Form (внешний отчёт/обработка)'],
+    ['Хранилище','Система контроля версий 1С'],
+    ['DT','Data Transfer (перенос данных)'],
+    ['УТ','Управление торговлей'],
+    ['БП','Бухгалтерия предприятия'],
+    ['ЗУП','Зарплата и управление персоналом'],
+    ['ERP','Enterprise Resource Planning'],
+    ['УНФ','Управление нашей фирмой'],
+    ['ДО','Документооборот'],
+    ['Kanban','Доска задач в формате карточек'],
+    ['EOD','End of Day — ежедневный отчёт'],
+    ['DOR','Definition of Ready — критерии готовности задачи'],
+    ['DOD','Definition of Done — критерии выполнения задачи'],
+    ['SLA','Service Level Agreement — уровень обслуживания'],
+    ['КП','Коммерческое предложение'],
+    ['ТЗ','Техническое задание'],
+    ['Спринт','Короткий итерационный цикл разработки'],
+    ['RDP','Remote Desktop Protocol'],
+    ['VPS','Virtual Private Server'],
+    ['LLM','Large Language Model'],
+    ['API','Application Programming Interface'],
+    ['HTTP-сервис','REST/SOAP интерфейс 1С'],
+    ['NDA','Non-Disclosure Agreement'],
+    ['ЭДО','Электронный документооборот'],
+    ['Vibe Coding','Кодогенерация через ИИ по описанию'],
+  ];
+  return '<div class="glossary-grid">'+terms.map(function(t){return '<div class="glossary-item"><div class="glossary-term">'+t[0]+'</div><div class="glossary-desc">'+t[1]+'</div></div>';}).join('')+'</div>';
+}
+
+function s12(){
+  var faqs=[
+    ['С чего начать?','Получите чек-лист от руководителя, настройте доступы (RDP, Bitrix24, Notion), присоединитесь к общему чату в Telegram.'],
+    ['Какой график работы?','9:00\u201318:00, гибкое начало, полностью удалённый формат.'],
+    ['Как получить доступ к серверам?','RDP-доступ выдаётся руководителем при онбординге.'],
+    ['Какую IDE использовать?','Cursor (основная) + 1С:Конфигуратор.'],
+    ['Как отправлять EOD?','Через Telegram-бота. Шаблон: что сделал \u2192 что планирую \u2192 блокеры.'],
+    ['Что делать, если застрял на задаче?','30 минут попытаться самостоятельно \u2192 написать в общий чат.'],
+    ['Можно использовать клиентские данные для тестов?','Только на Prod-контуре, только через NDA Gateway.'],
+    ['Как оформить отпуск?','28 дней в году. Предупредить за 2 недели.'],
+    ['Где хранится документация?','В Notion — архитектура, протоколы, база знаний.'],
+    ['Какие основные конфигурации 1С используются?','УТ (основная), БП, ЗУП, ERP, УНФ, ДО.'],
+  ];
+  return '<div class="accordion">'+faqs.map(function(f,i){return '<div class="accordion-item'+(i===0?' open':'')+'" onclick="this.classList.toggle(\'open\')"><div class="accordion-header"><span>'+f[0]+'</span><span class="accordion-arrow">\u25BC</span></div><div class="accordion-body"><div class="accordion-content">'+f[1]+'</div></div></div>';}).join('')+'</div>';
+}
+
+function s13(){
+  var groups=[
+    {day:'День 1',items:['Настройка RDP-доступа','Регистрация в Bitrix24','Присоединение к Telegram-чатам','Доступ к Notion']},
+    {day:'День 2',items:['Знакомство с Bitrix24 (канбан, задачи)','Установка и настройка Cursor','Знакомство с EOD-ботом']},
+    {day:'День 3',items:['Получение первой задачи','Код Review с руководителем','Первый EOD-отчёт']},
+    {day:'День 4\u20135',items:['Самостоятельная работа по задачам','Регулярные EOD-отчёты','Участие в чатах проекта']},
+  ];
+  return groups.map(function(g,gi){return '<div class="checklist-group"><div class="checklist-day">'+g.day+'</div>'+g.items.map(function(item,j){var key='d'+gi+'_'+j;var checked=state.checklistState[key];return '<div class="checklist-item'+(checked?' checked':'')+'" onclick="toggleCheckItem(\''+key+'\')"><div class="checklist-cb"></div><span>'+item+'</span></div>';}).join('')+'</div>';}).join('')+'<div class="warning-box"><span>\u{1F4A1}</span><span>Не стесняйтесь задавать вопросы!</span></div>';
+}
+
+function s14(){
+  return '<div class="adapt-grid"><div class="adapt-card c30"><div class="adapt-days">\u{1F3AF} 30 дней</div><ul><li>Настроить рабочее окружение</li><li>Познакомиться с командой</li><li>Понять процессы компании</li><li>Выполнить 2\u20134 задачи</li><li>Начать использовать Cursor + ИИ</li></ul></div><div class="adapt-card c60"><div class="adapt-days">\u{1F680} 60 дней</div><ul><li>Самостоятельная работа</li><li>Активное использование ИИ</li><li>Понимать архитектуру проектов</li><li>Создавать расширения/интеграции</li><li>Участвовать в планировании</li></ul></div><div class="adapt-card c90"><div class="adapt-days">\u{1F3C6} 90 дней</div><ul><li>Автономная работа</li><li>Предлагать решения</li><li>Помогать новичкам</li><li>Vibe Coding + Prompt Chaining</li><li>Участие в архитектурных решениях</li></ul></div></div><div class="info-box"><span>\u{1F91D}</span><span>Адаптация \u2014 двухсторонний процесс. Если что-то не устраивает \u2014 обсудите с руководителем.</span></div>';
+}
+
+// ========== TEST ==========
+function renderTest(){
+  if(!state.testStarted&&!state.testFinished){
+    return '<div class="test-intro"><div class="test-intro-icon">\u{1F4DD}</div><h2>Финальный тест</h2><p>20 вопросов по материалам Welcome Book. Для прохождения нужно правильно ответить минимум на 16 вопросов (80%).</p><button class="btn btn-primary" onclick="startTest()" style="font-size:15px;padding:14px 36px">Начать тест</button></div>';
+  }
+  var qIdx=state.testCurrentQ||0,q=QUESTIONS[qIdx],selected=state.testAnswers[qIdx],letters=['\u0410','\u0411','\u0412'];
+  var dots='';QUESTIONS.forEach(function(_,i){var cls='test-progress-dot';if(i<qIdx){cls+=state.testFinished?(state.testAnswers[i]===QUESTIONS[i].ans?' correct-dot':' wrong-dot'):' answered';}if(i===qIdx)cls+=' current';dots+='<div class="'+cls+'" style="flex:1"></div>';});
+  return '<div style="margin-bottom:20px"><div class="test-progress">'+dots+'</div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:var(--mono);font-size:11px;color:var(--gray-muted)">Вопрос '+(qIdx+1)+' из '+QUESTIONS.length+'</span><span style="font-family:var(--mono);font-size:11px;color:var(--gray-muted)">Ответов: '+Object.keys(state.testAnswers).length+'/'+QUESTIONS.length+'</span></div></div><div class="test-question"><div class="test-q-num">Вопрос '+(qIdx+1)+'</div><div class="test-q-text">'+q.q+'</div><div class="test-options">'+q.opts.map(function(opt,oi){return '<div class="test-option'+(selected===oi?' selected':'')+'" onclick="selectAnswer('+qIdx+','+oi+')"><div class="test-option-letter">'+letters[oi]+'</div><span>'+opt+'</span></div>';}).join('')+'</div></div>';
+}
+
+function startTest(){state.testStarted=true;state.testStartTime=Date.now();state.testCurrentQ=0;state.testAnswers={};saveState();render();}
+
+// ========== RESULTS ==========
+function renderResults(){
+  var score=state.testScore,pct=Math.round(score/20*100),passed=score>=16;
+  var timeSec=Math.round(state.testTime/1000),min=Math.floor(timeSec/60),sec=timeSec%60;
+  var wrongHTML='';var letters=['\u0410','\u0411','\u0412'];
+  QUESTIONS.forEach(function(q,i){
+    if(state.testAnswers[i]!==q.ans){
+      var userAns=state.testAnswers[i]!==undefined?letters[state.testAnswers[i]]+') '+q.opts[state.testAnswers[i]]:'Нет ответа';
+      var correctAns=letters[q.ans]+') '+q.opts[q.ans];
+      wrongHTML+='<div class="results-wrong-item"><div class="results-wrong-q">Вопрос '+(i+1)+': '+q.q+'</div><div class="results-wrong-a">Ваш ответ: <span style="color:var(--red)">'+userAns+'</span></div><div class="results-wrong-a">Правильный ответ: <span class="correct-a">'+correctAns+'</span></div></div>';
+    }
+  });
+  return '<div class="results"><div class="results-icon">'+(passed?'\u2705':'\u274C')+'</div><h2 class="'+(passed?'results-pass':'results-fail')+'">'+(passed?'Онбординг пройден!':'Тест не пройден')+'</h2><p style="color:var(--gray-body);font-size:14px;margin-bottom:20px">'+(passed?'Вы готовы к работе. Добро пожаловать в команду! \u{1F389}':'Нужно минимум 16 правильных ответов. Попробуйте ещё раз!')+'</p><div class="results-percent" style="color:'+(passed?'var(--yellow-hover)':'var(--red)')+'">'+pct+'%</div><div class="results-stats"><div class="results-stat"><div class="results-stat-val" style="color:var(--green)">'+score+'</div><div class="results-stat-label">Правильно</div></div><div class="results-stat"><div class="results-stat-val" style="color:var(--red)">'+(20-score)+'</div><div class="results-stat-label">Неправильно</div></div><div class="results-stat"><div class="results-stat-val">'+min+':'+sec.toString().padStart(2,'0')+'</div><div class="results-stat-label">Время</div></div></div>'+(wrongHTML?'<div class="results-wrong"><h3>Ошибки:</h3>'+wrongHTML+'</div>':'<div class="info-box" style="justify-content:center"><span>\u{1F389}</span><span>Все ответы верные! Отличный результат!</span></div>')+'</div>'+(passed?'<div class="confetti-container" id="confetti"></div>':'');
+}
+
+// ========== CONFETTI ==========
+function launchConfetti(){
+  var container=document.getElementById('confetti');if(!container)return;
+  var colors=['#F5C327','#F9E080','#22c55e','#1A1A1A','#ef4444','#666666','#ffffff'];
+  for(var i=0;i<80;i++){
+    var piece=document.createElement('div');piece.className='confetti';
+    piece.style.left=Math.random()*100+'%';
+    piece.style.backgroundColor=colors[Math.floor(Math.random()*colors.length)];
+    piece.style.width=(Math.random()*8+4)+'px';piece.style.height=(Math.random()*8+4)+'px';
+    piece.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    piece.style.animation='confettiFall '+(Math.random()*2+2)+'s linear '+(Math.random()*1)+'s forwards';
+    container.appendChild(piece);
+  }
+}
+
+// ========== INIT ==========
+if(!state.testCurrentQ)state.testCurrentQ=0;
+loadState();render();
+if(state.currentView==='results'&&state.testScore>=16){setTimeout(launchConfetti,300);}
+</script>
+</body>
+</html>
