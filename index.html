@@ -802,13 +802,13 @@ function renderAdminContent(overlay){
   var changes=Object.keys(custom).length;
   var cl=getChangelog();
   var html='<div class="admin-panel">';
-  html+='<h2>\\u2699\\uFE0F Редактирование контента</h2>';
+  html+='<h2>\u2699\uFE0F Редактирование контента</h2>';
   html+='<p class="admin-info">Здесь можно просматривать и корректировать текст разделов. Изменения сохраняются локально в браузере и применяются поверх стандартного контента.</p>';
   // Tabs
   html+='<div class="admin-tabs">';
-  html+='<div class="admin-tab'+(adminState.tab==='sections'?' active':'')+'" onclick="adminTabSwitch(\\'sections\\')">\\u{1F4D6} Разделы</div>';
-  html+='<div class="admin-tab'+(adminState.tab==='questions'?' active':'')+'" onclick="adminTabSwitch(\\'questions\\')">\\u{1F9E0} Тест</div>';
-  html+='<div class="admin-tab'+(adminState.tab==='history'?' active':'')+'" onclick="adminTabSwitch(\\'history\\')">\\u{1F4DD} История</div>';
+  html+='<div class="admin-tab'+(adminState.tab==='sections'?' active':'')+'" onclick="adminTabSwitch(\'sections\')">\u{1F4D6} Разделы</div>';
+  html+='<div class="admin-tab'+(adminState.tab==='questions'?' active':'')+'" onclick="adminTabSwitch(\'questions\')">\u{1F9E0} Тест</div>';
+  html+='<div class="admin-tab'+(adminState.tab==='history'?' active':'')+'" onclick="adminTabSwitch(\'history\')">\u{1F4DD} История</div>';
   html+='</div>';
 
   if(adminState.tab==='sections'){
@@ -821,12 +821,12 @@ function renderAdminContent(overlay){
 
   // Actions
   html+='<div class="admin-actions">';
-  html+='<button class="admin-btn admin-btn-export" onclick="exportContent()">\\u{1F4E5} Экспорт JSON</button>';
-  html+='<label class="admin-btn admin-btn-export" style="position:relative">\\u{1F4E4} Импорт JSON<input type="file" accept=".json" style="position:absolute;opacity:0;width:0;height:0" onchange="importContent(event)"></label>';
+  html+='<button class="admin-btn admin-btn-export" onclick="exportContent()">\u{1F4E5} Экспорт JSON</button>';
+  html+='<label class="admin-btn admin-btn-export" style="position:relative">\u{1F4E4} Импорт JSON<input type="file" accept=".json" style="position:absolute;opacity:0;width:0;height:0" onchange="importContent(event)"></label>';
   if(changes>0){
-    html+='<button class="admin-btn admin-btn-danger" onclick="resetCustom()">\\u{1F5D1} Сбросить изменения ('+changes+')</button>';
+    html+='<button class="admin-btn admin-btn-danger" onclick="resetCustom()">\u{1F5D1} Сбросить изменения ('+changes+')</button>';
   }
-  html+='<button class="admin-btn admin-btn-cancel" onclick="closeAdmin()">\\u2715 Закрыть</button>';
+  html+='<button class="admin-btn admin-btn-cancel" onclick="closeAdmin()">\u2715 Закрыть</button>';
   html+='</div>';
   html+='</div>';
   overlay.innerHTML=html;
@@ -837,7 +837,7 @@ function renderSectionsTab(custom){
   SECTIONS.forEach(function(sec,i){
     var hasCustom=custom['s'+(i+1)];
     html+='<div class="admin-section-item'+(adminState.selectedSection===i?' selected':'')+'" onclick="selectAdminSection('+i+')">';
-    html+='<div class="admin-section-label">'+sec.emoji+' '+sec.title+(hasCustom?' <span class="admin-counter">\\u2705 изменён</span>':'')+'</div>';
+    html+='<div class="admin-section-label">'+sec.emoji+' '+sec.title+(hasCustom?' <span class="admin-counter">\u2705 изменён</span>':'')+'</div>';
     html+='<div class="admin-info">'+sec.short+'</div>';
     html+='</div>';
   });
@@ -848,12 +848,12 @@ function renderSectionsTab(custom){
     var originalFn=getSectionContent(idx);
     var tmp=document.createElement('div');tmp.innerHTML=originalFn;
     var originalText=tmp.textContent||tmp.innerText||'';
-    html+='<h3>\\u270F\\uFE0F Редактирование: '+SECTIONS[idx].title+'</h3>';
+    html+='<h3>\u270F\uFE0F Редактирование: '+SECTIONS[idx].title+'</h3>';
     html+='<div class="admin-info" style="margin-bottom:8px">Замените содержимое раздела. Оставьте пустым — будет использоваться стандартный текст. HTML поддерживается.</div>';
     html+='<textarea id="adminEditor" oninput="adminState.editContent=this.value" placeholder="Введите новый текст раздела...">'+escapeHtml(currentCustom)+'</textarea>';
     html+='<div class="admin-actions" style="margin-top:12px">';
-    html+='<button class="admin-btn admin-btn-save" onclick="saveSectionContent('+idx+')">\\u{1F4BE} Сохранить раздел</button>';
-    html+='<button class="admin-btn admin-btn-cancel" onclick="previewOriginal('+idx+')" title="Показать оригинал">\\u{1F441} Оригинал</button>';
+    html+='<button class="admin-btn admin-btn-save" onclick="saveSectionContent('+idx+')">\u{1F4BE} Сохранить раздел</button>';
+    html+='<button class="admin-btn admin-btn-cancel" onclick="previewOriginal('+idx+')" title="Показать оригинал">\u{1F441} Оригинал</button>';
     html+='</div>';
     html+='<div id="originalPreview"></div>';
   }
@@ -866,7 +866,7 @@ function renderQuestionsTab(custom){
     var qKey='q'+i;
     var hasCustom=custom[qKey];
     html+='<div class="admin-section-item" onclick="selectAdminQuestion('+i+')">';
-    html+='<div class="admin-section-label">'+(i+1)+'. '+q.q+(hasCustom?' <span class="admin-counter">\\u2705</span>':'')+'</div>';
+    html+='<div class="admin-section-label">'+(i+1)+'. '+q.q+(hasCustom?' <span class="admin-counter">\u2705</span>':'')+'</div>';
     html+='<div class="admin-info">'+q.opts.join(' / ')+'</div>';
     html+='</div>';
   });
@@ -876,12 +876,12 @@ function renderQuestionsTab(custom){
     var cur=custom[qKey]||null;
     var orig=cur?{q:QUESTIONS[idx].q,opts:QUESTIONS[idx].opts,ans:QUESTIONS[idx].ans}:null;
     var editing=cur||QUESTIONS[idx];
-    html+='<h3>\\u270F\\uFE0F Вопрос '+(idx+1)+'</h3>';
+    html+='<h3>\u270F\uFE0F Вопрос '+(idx+1)+'</h3>';
     html+='<div class="admin-section-item" style="cursor:default"><label class="admin-section-label">Текст вопроса</label><textarea id="adminQText" style="margin-top:6px" oninput="adminState.editQText=this.value">'+editing.q+'</textarea></div>';
-    html+='<div class="admin-section-item" style="cursor:default"><label class="admin-section-label">Варианты ответов (по одному на строку)</label><textarea id="adminQOpts" style="margin-top:6px" oninput="adminState.editQOpts=this.value">'+editing.opts.join('\\n')+'</textarea></div>';
+    html+='<div class="admin-section-item" style="cursor:default"><label class="admin-section-label">Варианты ответов (по одному на строку)</label><textarea id="adminQOpts" style="margin-top:6px" oninput="adminState.editQOpts=this.value">'+editing.opts.join('\n')+'</textarea></div>';
     html+='<div class="admin-section-item" style="cursor:default"><label class="admin-section-label">Номер правильного ответа (0, 1, 2...)</label><input type="number" id="adminQAns" min="0" value="'+editing.ans+'" style="margin-top:6px;padding:8px;border:1px solid var(--gray-border);border-radius:var(--radius-sm);font-size:13px;width:60px"></div>';
     html+='<div class="admin-actions" style="margin-top:12px">';
-    html+='<button class="admin-btn admin-btn-save" onclick="saveQuestionContent('+idx+')">\\u{1F4BE} Сохранить вопрос</button>';
+    html+='<button class="admin-btn admin-btn-save" onclick="saveQuestionContent('+idx+')">\u{1F4BE} Сохранить вопрос</button>';
     if(cur){html+='<button class="admin-btn admin-btn-danger" onclick="deleteQuestionCustom('+idx+')">Удалить кастом</button>';}
     html+='</div>';
   }
@@ -945,7 +945,7 @@ function saveQuestionContent(idx){
   var qAns=document.getElementById('adminQAns');
   if(!qText||!qOpts||!qAns)return;
   var custom=getCustomContent();
-  custom['q'+idx]={q:qText.value.trim(),opts:qOpts.value.trim().split('\\n').filter(function(s){return s.trim();}),ans:parseInt(qAns.value)||0};
+  custom['q'+idx]={q:qText.value.trim(),opts:qOpts.value.trim().split('\n').filter(function(s){return s.trim();}),ans:parseInt(qAns.value)||0};
   addChangelog('Изменён вопрос '+(idx+1));
   saveCustomContent(custom);
   var overlay=document.getElementById('adminOverlay');
@@ -968,7 +968,7 @@ function previewOriginal(idx){
   var originalFn=getSectionContent(idx);
   var tmp=document.createElement('div');tmp.innerHTML=originalFn;
   var text=tmp.textContent||tmp.innerText||'';
-  el.innerHTML='<div class="admin-section-item" style="cursor:default;margin-top:8px"><div class="admin-section-label">\\u{1F4C4} Оригинальный текст</div><div style="font-size:12px;color:var(--gray-body);margin-top:6px;max-height:200px;overflow-y:auto;white-space:pre-wrap">'+escapeHtml(text)+'</div></div>';
+  el.innerHTML='<div class="admin-section-item" style="cursor:default;margin-top:8px"><div class="admin-section-label">\u{1F4C4} Оригинальный текст</div><div style="font-size:12px;color:var(--gray-body);margin-top:6px;max-height:200px;overflow-y:auto;white-space:pre-wrap">'+escapeHtml(text)+'</div></div>';
 }
 
 function exportContent(){
