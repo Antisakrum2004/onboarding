@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Архитектура — Онбординг 1С АйтиЛаб</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --yellow:#F5C327;--yellow-hover:#e6b41f;--yellow-light:#F9E080;--yellow-bg:rgba(245,195,39,.08);
+  --black:#1A1A1A;--dark:#2D2D2D;--white:#FFFFFF;--page-bg:#F4F4F2;
+  --gray-body:#555;--gray-muted:#888;--gray-border:#E5E5E5;
+  --green:#22c55e;--green-bg:#dcfce7;--red:#ef4444;--red-bg:#fef2f2;
+  --blue:#3b82f6;--blue-bg:#eff6ff;
+  --radius:10px;--radius-sm:6px;--radius-tag:4px;
+  --font:'Manrope',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+body{font-family:var(--font);background:var(--page-bg);color:var(--gray-body);line-height:1.8;min-height:100vh;font-size:14px;word-break:break-word;overflow-wrap:break-word}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.header{background:var(--dark);color:var(--white);padding:32px 0;text-align:center;border-bottom:3px solid var(--yellow)}
+.header h1{font-size:28px;font-weight:800;margin-bottom:4px}
+.header .subtitle{font-size:14px;color:#aaa;font-family:var(--mono)}
+.header .badge{display:inline-block;background:var(--yellow);color:var(--black);padding:4px 14px;border-radius:var(--radius-tag);font-size:11px;font-weight:700;margin-top:12px;font-family:var(--mono);letter-spacing:.05em}
+
+.container{max-width:860px;margin:0 auto;padding:32px 24px}
+
+.toc{background:var(--white);border:1px solid var(--gray-border);border-radius:var(--radius);padding:24px 28px;margin-bottom:32px}
+.toc h2{font-size:16px;font-weight:700;color:var(--black);margin-bottom:12px}
+.toc ul{list-style:none;margin:0}
+.toc li{padding:5px 0;border-bottom:0.5px solid var(--gray-border)}
+.toc li:last-child{border-bottom:none}
+.toc li a{color:var(--gray-body);font-size:13px;display:flex;align-items:center;gap:8px}
+.toc li a:hover{color:var(--black);text-decoration:none}
+.toc li .toc-num{background:var(--yellow-bg);color:var(--black);font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-tag);min-width:24px;text-align:center}
+
+h2.section-title{font-size:22px;font-weight:800;color:var(--black);margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--yellow);display:flex;align-items:center;gap:10px}
+h2.section-title .sec-num{background:var(--yellow);color:var(--black);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+h3{font-size:16px;font-weight:700;color:var(--black);margin:24px 0 10px}
+h4{font-size:13px;font-weight:700;color:var(--black);margin:16px 0 6px}
+p{margin-bottom:12px}
+
+.card{background:var(--white);border:1px solid var(--gray-border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.card-blue{border-left:3px solid var(--blue)}
+.card-yellow{border-left:3px solid var(--yellow)}
+.card-green{border-left:3px solid var(--green)}
+.card-red{border-left:3px solid var(--red)}
+
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+th{background:var(--page-bg);padding:8px 12px;text-align:left;font-weight:600;border:1px solid var(--gray-border);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--black);font-family:var(--mono)}
+td{padding:8px 12px;border:1px solid var(--gray-border);vertical-align:top}
+
+code{background:var(--page-bg);padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--dark);border:1px solid var(--gray-border)}
+pre{background:var(--black);border-radius:var(--radius-sm);padding:16px 20px;font-family:var(--mono);font-size:12px;line-height:1.8;color:#e0e0e0;overflow-x:auto;margin:12px 0}
+pre strong{color:var(--yellow);font-weight:500}
+pre .cm{color:#6a9955}
+pre .kw{color:#c586c0}
+pre .str{color:#ce9178}
+pre .fn{color:#dcdcaa}
+
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0}
+.info-item{background:var(--page-bg);border:1px solid var(--gray-border);border-radius:var(--radius-sm);padding:14px}
+.info-item-title{font-size:13px;font-weight:600;color:var(--black);margin-bottom:4px}
+.info-item-desc{font-size:11px;color:var(--gray-muted);line-height:1.6}
+
+.color-swatch{display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid rgba(0,0,0,.1);vertical-align:middle;margin-right:6px}
+
+ul.checklist{list-style:none;margin:8px 0}
+ul.checklist li{padding:4px 0 4px 24px;position:relative;font-size:13px}
+ul.checklist li::before{content:'\2192';position:absolute;left:0;color:var(--yellow);font-size:12px;font-weight:700}
+
+.warn{background:#FEF3C7;border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);padding:12px 16px;margin:12px 0;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.warn span:first-child{font-size:16px;flex-shrink:0}
+
+.tip{background:var(--green-bg);border:1px solid rgba(34,197,94,.2);border-radius:var(--radius-sm);padding:12px 16px;margin:12px 0;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.tip span:first-child{font-size:16px;flex-shrink:0}
+
+@media(max-width:600px){
+  .container{padding:20px 16px}
+  .header h1{font-size:22px}
+  .info-grid{grid-template-columns:1fr}
+  pre{font-size:11px;padding:12px 14px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Онбординг 1С АйтиЛаб</h1>
+  <div class="subtitle">Техническая документация · Архитектура и устройство кода</div>
+  <div class="badge">VERSION 1.0 · 2025-04-07</div>
+</div>
+
+<div class="container">
+
+<!-- ОГЛАВЛЕНИЕ -->
+<div class="toc">
+  <h2>Оглавление</h2>
+  <ul>
+    <li><a href="#s1"><span class="toc-num">01</span> Общая информация о проекте</a></li>
+    <li><a href="#s2"><span class="toc-num">02</span> Структура файла и архитектура</a></li>
+    <li><a href="#s3"><span class="toc-num">03</span> Фирменный стиль (Design System)</a></li>
+    <li><a href="#s4"><span class="toc-num">04</span> Система навигации и маршрутизация</a></li>
+    <li><a href="#s5"><span class="toc-num">05</span> Управление состоянием (State)</a></li>
+    <li><a href="#s6"><span class="toc-num">06</span> Контент — 14 разделов</a></li>
+    <li><a href="#s7"><span class="toc-num">07</span> Система тестирования (20 вопросов)</a></li>
+    <li><a href="#s8"><span class="toc-num">08</span> Admin-панель (редактирование контента)</a></li>
+    <li><a href="#s9"><span class="toc-num">09</span> localStorage — ключи и данные</a></li>
+    <li><a href="#s10"><span class="toc-num">10</span> Чек-лист первой недели</a></li>
+    <li><a href="#s11"><span class="toc-num">11</span> Адаптивная вёрстка и мобильная версия</a></li>
+    <li><a href="#s12"><span class="toc-num">12</span> Деплой и GitHub Pages</a></li>
+    <li><a href="#s13"><span class="toc-num">13</span> Известные ограничения и особенности</a></li>
+    <li><a href="#s14"><span class="toc-num">14</span> Гайд по внесению изменений</a></li>
+    <li><a href="#s15"><span class="toc-num">15</span> Возможные улучшения</a></li>
+  </ul>
+</div>
+
+<!-- ===== 01 ===== -->
+<h2 class="section-title" id="s1"><span class="sec-num">01</span> Общая информация о проекте</h2>
+
+<div class="card">
+  <h3>Что это</h3>
+  <p><strong>Онбординг 1С АйтиЛаб</strong> (он же «Welcome Book») — интерактивная HTML-страница, которая знакомит новых сотрудников компании с процессами, инструментами, командой и правилами работы. Это <strong>Single-Page Application (SPA)</strong>, реализованная в одном HTML-файле без внешних зависимостей (кроме Google Fonts).</p>
+
+  <div class="info-grid">
+    <div class="info-item"><div class="info-item-title">Формат</div><div class="info-item-desc">Один HTML-файл (~98 КБ), содержит CSS, JS и весь контент</div></div>
+    <div class="info-item"><div class="info-item-title">Фреймворк</div><div class="info-item-desc">Без фреймворков — чистый HTML/CSS/JS (vanilla)</div></div>
+    <div class="info-item"><div class="info-item-title">Содержание</div><div class="info-item-desc">4 части, 14 разделов, 20 вопросов финального теста</div></div>
+    <div class="info-item"><div class="info-item-title">Хостинг</div><div class="info-item-desc">GitHub Pages — автоматически из ветки main</div></div>
+    <div class="info-item"><div class="info-item-title">Репозиторий</div><div class="info-item-desc">github.com/Antisakrum2004/onboarding</div></div>
+    <div class="info-item"><div class="info-item-title">URL</div><div class="info-item-desc">antisakrum2004.github.io/onboarding/</div></div>
+  </div>
+</div>
+
+<div class="card card-yellow">
+  <h4>Почему один файл?</h4>
+  <p>Такая архитектура выбрана целенаправленно. Онбординг должен быть максимально простым в деплое: один файл = одна загрузка, нет сборки, нет зависимостей, нет серверной части. Любой человек может открыть файл в любом текстовом редакторе, найти нужную функцию и поправить текст. Это критично, потому что контент будет часто меняться.</p>
+</div>
+
+<!-- ===== 02 ===== -->
+<h2 class="section-title" id="s2"><span class="sec-num">02</span> Структура файла и архитектура</h2>
+
+<div class="card">
+  <p>Файл <code>index.html</code> (~1050 строк) состоит из трёх крупных блоков:</p>
+
+  <table>
+    <thead><tr><th>Блок</th><th>Строки (примерно)</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td><strong>CSS (&lt;style&gt;)</strong></td><td>8–349</td><td>Все стили: переменные, компоненты, адаптив, печать</td></tr>
+      <tr><td><strong>HTML (&lt;body&gt;)</strong></td><td>350–417</td><td>Шаблон: header, sidebar, mobile nav, content area</td></tr>
+      <tr><td><strong>JavaScript (&lt;script&gt;)</strong></td><td>419–1050</td><td>Данные, стейт, навигация, рендер, admin, тест</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Архитектура JavaScript (крупные блоки по порядку)</h4>
+  <table>
+    <thead><tr><th>Блок</th><th>Что содержит</th></tr></thead>
+    <tbody>
+      <tr><td><code>SECTIONS[]</code></td><td>Массив из 14 объектов: id, num, part, emoji, title, short</td></tr>
+      <tr><td><code>PART_NAMES{}</code></td><td>Названия 4-х частей (ОРГАНИЗАЦИЯ, ПРОЦЕССЫ, ...)</td></tr>
+      <tr><td><code>QUESTIONS[]</code></td><td>Массив из 20 объектов: q, opts[], ans</td></tr>
+      <tr><td><code>state{}</code></td><td>Глобальное состояние приложения</td></tr>
+      <tr><td><code>loadState() / saveState()</code></td><td>Чтение/запись state в localStorage</td></tr>
+      <tr><td><code>navigate(view, idx)</code></td><td>Маршрутизация: welcome / section / test / results / admin</td></tr>
+      <tr><td><code>render()</code></td><td>Главный рендер: sidebar + content + bottom bar</td></tr>
+      <tr><td><code>renderSidebar()</code></td><td>Генерация навигации сайдбара</td></tr>
+      <tr><td><code>renderContent()</code></td><td>Диспетчер контента по текущему view</td></tr>
+      <tr><td><code>renderWelcome()</code></td><td>Приветственная страница (🚀 + статистика)</td></tr>
+      <tr><td><code>getSectionHTML(idx)</code></td><td>Обёртка раздела (бейдж + заголовок + контент)</td></tr>
+      <tr><td><code>getSectionContent(idx)</code></td><td>Switch — вызывает s1() ... s14()</td></tr>
+      <tr><td><code>s1() ... s14()</code></td><td>14 функций — каждая возвращает HTML одной секции</td></tr>
+      <tr><td><code>renderTest()</code></td><td>Рендер теста (intro / вопрос / прогресс-бар)</td></tr>
+      <tr><td><code>renderResults()</code></td><td>Результаты теста с конфетти</td></tr>
+      <tr><td><code>Admin-функции</code></td><td>openAdminPanel, renderAdminContent, renderSectionsTab, renderQuestionsTab, saveSectionContent, saveQuestionContent, exportContent, importContent, resetCustom и др.</td></tr>
+      <tr><td><code>Custom Content Injection</code></td><td>Перехват getSectionContent — подставляет кастомный контент из localStorage</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Принцип рендеринга</h3>
+<div class="card">
+  <p>Приложение работает по принципу <strong>«состояние → рендер»</strong>. При каждом изменении state вызывается <code>render()</code>, который полностью перестраивает DOM:</p>
+  <pre><code><span class="cm">// Главный цикл:</span>
+<span class="kw">function</span> <span class="fn">render</span>() {
+  <span class="fn">renderSidebar</span>();     <span class="cm">// Перестроить навигацию</span>
+  <span class="fn">renderContent</span>();    <span class="cm">// Перестроить центральную область</span>
+  <span class="fn">renderBottomAction</span>(); <span class="cm">// Перестроить нижнюю панель</span>
+}</code></pre>
+  <p>Все HTML-строки генерируются через конкатенацию в JavaScript. Контент каждой из 14 секций — это отдельная функция (<code>s1()</code>...<code>s14()</code>), которая возвращает HTML-строку с готовой разметкой.</p>
+</div>
+
+<!-- ===== 03 ===== -->
+<h2 class="section-title" id="s3"><span class="sec-num">03</span> Фирменный стиль (Design System)</h2>
+
+<div class="card">
+  <p>Визуальный стиль полностью соответствует фирменному брендбуку <strong>1С АйтиЛаб</strong>. Все цвета, шрифты и отступы заданы через CSS-переменные в <code>:root</code>, что позволяет мгновенно изменить тему в одном месте.</p>
+
+  <h4>Палитра цветов</h4>
+  <table>
+    <thead><tr><th>Переменная</th><th>Значение</th><th>Применение</th></tr></thead>
+    <tbody>
+      <tr><td><code>--yellow</code></td><td><span class="color-swatch" style="background:#F5C327"></span>#F5C327</td><td>Основной акцент (кнопки, иконки, прогресс)</td></tr>
+      <tr><td><code>--yellow-hover</code></td><td><span class="color-swatch" style="background:#e6b41f"></span>#e6b41f</td><td>Hover-состояние жёлтого</td></tr>
+      <tr><td><code>--yellow-light</code></td><td><span class="color-swatch" style="background:#F9E080"></span>#F9E080</td><td>Фон чек-лист дней, прогресс-бары</td></tr>
+      <tr><td><code>--yellow-bg</code></td><td><span class="color-swatch" style="background:rgba(245,195,39,.08)"></span>rgba(245,195,39,.08)</td><td>Фон активного пункта, hover-подсветка</td></tr>
+      <tr><td><code>--black</code></td><td><span class="color-swatch" style="background:#1A1A1A"></span>#1A1A1A</td><td>Тексты заголовков, код-блоки</td></tr>
+      <tr><td><code>--dark</code></td><td><span class="color-swatch" style="background:#2D2D2D"></span>#2D2D2D</td><td>Фон header-bar, sidebar header</td></tr>
+      <tr><td><code>--white</code></td><td><span class="color-swatch" style="background:#FFFFFF"></span>#FFFFFF</td><td>Фон карточек, sidebar</td></tr>
+      <tr><td><code>--page-bg</code></td><td><span class="color-swatch" style="background:#F4F4F2"></span>#F4F4F2</td><td>Основной фон страницы</td></tr>
+      <tr><td><code>--gray-body</code></td><td><span class="color-swatch" style="background:#666666"></span>#666666</td><td>Основной текст</td></tr>
+      <tr><td><code>--gray-muted</code></td><td><span class="color-swatch" style="background:#999999"></span>#999999</td><td>Второстепенный текст, labels</td></tr>
+      <tr><td><code>--gray-border</code></td><td><span class="color-swatch" style="background:#E5E5E5"></span>#E5E5E5</td><td>Все рамки, разделители</td></tr>
+      <tr><td><code>--green</code></td><td><span class="color-swatch" style="background:#22c55e"></span>#22c55e</td><td>Успех, «Ознакомлен», правильный ответ</td></tr>
+      <tr><td><code>--green-bg</code></td><td><span class="color-swatch" style="background:#dcfce7"></span>#dcfce7</td><td>Фон info-box успешных сообщений</td></tr>
+      <tr><td><code>--red</code></td><td><span class="color-swatch" style="background:#ef4444"></span>#ef4444</td><td>Ошибка, предупреждение, неправильный ответ</td></tr>
+      <tr><td><code>--red-bg</code></td><td><span class="color-swatch" style="background:#fef2f2"></span>#fef2f2</td><td>Фон alert-box</td></tr>
+      <tr><td><code>--blue</code></td><td><span class="color-swatch" style="background:#3b82f6"></span>#3b82f6</td><td>DOR-бейдж, check-box, ссылки</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h4>Типографика</h4>
+  <table>
+    <thead><tr><th>Переменная</th><th>Значение</th><th>Применение</th></tr></thead>
+    <tbody>
+      <tr><td><code>--font</code></td><td>'Manrope', system-ui, sans-serif</td><td>Основной шрифт всего текста</td></tr>
+      <tr><td><code>--mono</code></td><td>'IBM Plex Mono', monospace</td><td>Лейблы, бейджи, код, технический текст</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Manrope</strong> — геометрический гротеск с отличной читабельностью. Используется для заголовков (700–800 weight) и основного текста (400–500 weight). Google Fonts, подключается через &lt;link&gt;.</p>
+  <p><strong>IBM Plex Mono</strong> — моноширинный шрифт для технических элементов: бейджи частей (ЧАСТЬ 1. ОРГАНИЗАЦИЯ), прогресс-лейблы, EOD-блок, код.</p>
+</div>
+
+<div class="card">
+  <h4>Размеры и отступы</h4>
+  <table>
+    <thead><tr><th>Переменная</th><th>Значение</th><th>Применение</th></tr></thead>
+    <tbody>
+      <tr><td><code>--radius</code></td><td>10px</td><td>Основной border-radius карточек</td></tr>
+      <tr><td><code>--radius-sm</code></td><td>6px</td><td>Мелкие элементы (кнопки, теги, аккордеон)</td></tr>
+      <tr><td><code>--radius-tag</code></td><td>4px</td><td>Бейджи, лейблы, тег-пилсы</td></tr>
+      <tr><td><code>--sidebar-w</code></td><td>260px</td><td>Ширина сайдбара</td></tr>
+      <tr><td><code>--transition</code></td><td>all .2s ease</td><td>Стандартная анимация</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h4>Компоненты дизайна (CSS-классы)</h4>
+  <table>
+    <thead><tr><th>Класс</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td><code>.section-card</code></td><td>Белая карточка с рамкой — контейнер каждого раздела</td></tr>
+      <tr><td><code>.section-part-badge</code></td><td>Моноширинный бейдж «ЧАСТЬ 1 — ОРГАНИЗАЦИЯ»</td></tr>
+      <tr><td><code>.info-card</code></td><td>Серый фоновый блок с информацией</td></tr>
+      <tr><td><code>.value-grid / .value-item</code></td><td>Сетка карточек ценностей/метрик (auto-fill, minmax)</td></tr>
+      <tr><td><code>.timeline / .timeline-item</code></td><td>Вертикальный таймлайн с жёлтыми точками</td></tr>
+      <tr><td><code>.kanban-table</code></td><td>Таблица канбан-стадий с цветным текстом</td></tr>
+      <tr><td><code>.check-box</code></td><td>Голубой инфо-блок (используется для DOR, DOD)</td></tr>
+      <tr><td><code>.warning-box</code></td><td>Жёлтый блок предупреждения</td></tr>
+      <tr><td><code>.alert-box</code></td><td>Красный блок ошибки/запрета</td></tr>
+      <tr><td><code>.info-box</code></td><td>Зелёный блок успешного сообщения</td></tr>
+      <tr><td><code>.eod-block</code></td><td>Тёмный блок с моноширинным текстом (формат EOD)</td></tr>
+      <tr><td><code>.accordion</code></td><td>Раскрывающиеся блоки (FAQ)</td></tr>
+      <tr><td><code>.glossary-grid</code></td><td>Сетка терминов глоссария</td></tr>
+      <tr><td><code>.tag-pill</code></td><td>Пилл-тег (конфигурации 1С, инструменты)</td></tr>
+      <tr><td><code>.adapt-grid / .adapt-card</code></td><td>3-колоночная сетка плана адаптации 7-30-60</td></tr>
+      <tr><td><code>.checklist-group / .checklist-item</code></td><td>Интерактивный чек-лист первой недели</td></tr>
+      <tr><td><code>.btn / .btn-primary / .btn-secondary</code></td><td>Кнопки: жёлтая основная, серая вторичная</td></tr>
+      <tr><td><code>.btn-success / .btn-danger</code></td><td>Зелёная кнопка «Ознакомлен», красная «Повторить»</td></tr>
+      <tr><td><code>.test-option / .test-option-letter</code></td><td>Варианты ответов в тесте (A, Б, В)</td></tr>
+      <tr><td><code>.confetti-container / .confetti</code></td><td>Конфетти при успешном прохождении</td></tr>
+      <tr><td><code>.welcome / .welcome-stats</code></td><td>Приветственная страница с thống</td></tr>
+      <tr><td><code>.admin-panel / .admin-overlay</code></td><td>Модальное окно редактирования контента</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== 04 ===== -->
+<h2 class="section-title" id="s4"><span class="sec-num">04</span> Система навигации и маршрутизация</h2>
+
+<div class="card">
+  <p>Приложение не использует URL-маршрутизацию (no hash, no history API). Вместо этого — <strong>внутренняя маршрутизация через state.currentView</strong>:</p>
+
+  <pre><code><span class="kw">function</span> <span class="fn">navigate</span>(view, sectionIndex) {
+  <span class="kw">if</span> (view === <strong>'welcome'</strong>)  { state.currentView = <strong>'welcome'</strong>; }
+  <span class="kw">if</span> (view === <strong>'section'</strong>)  { state.currentView = <strong>'section'</strong>; state.currentSection = sectionIndex; }
+  <span class="kw">if</span> (view === <strong>'test'</strong>)     { state.currentView = <strong>'test'</strong>; }      <span class="cm">// только если все 14 разделов пройдены</span>
+  <span class="kw">if</span> (view === <strong>'results'</strong>)  { state.currentView = <strong>'results'</strong>; }
+  <span class="kw">if</span> (view === <strong>'admin'</strong>)    { state.currentView = <strong>'admin'</strong>; }
+  <span class="fn">saveState</span>(); <span class="fn">render</span>(); <span class="fn">window.scrollTo</span>(0, 0);
+}</code></pre>
+
+  <table>
+    <thead><tr><th>View</th><th>Что рендерится</th><th>Когда доступен</th></tr></thead>
+    <tbody>
+      <tr><td><code>welcome</code></td><td>Приветственная страница с кнопкой «Начать»</td><td>Всегда (кнопка 🏠 в сайдбаре)</td></tr>
+      <tr><td><code>section</code></td><td>Один из 14 разделов (s1...s14)</td><td>Всегда (навигация свободная)</td></tr>
+      <tr><td><code>test</code></td><td>Финальный тест (20 вопросов)</td><td>Только если completed.length >= 14</td></tr>
+      <tr><td><code>results</code></td><td>Результаты теста с конфетти</td><td>После завершения теста</td></tr>
+      <tr><td><code>admin</code></td><td>Модальное окно редактирования</td><td>Всегда (кнопка ⚙️ в сайдбаре)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card card-yellow">
+  <h4>Сайдбар</h4>
+  <p>Сайдбар генерируется динамически через <code>renderSidebar()</code>. Структура:</p>
+  <ul class="checklist">
+    <li><strong>🏠 Главная</strong> — навигация на welcome (класс <code>.nav-home</code>)</li>
+    <li><strong>Прогресс-бар</strong> — «X из 14» с жёлтой полоской</li>
+    <li><strong>4 группы разделов</strong> — ЧАСТЬ 1...4 с заголовками (класс <code>.nav-group-title</code>)</li>
+    <li><strong>14 пунктов</strong> — с emoji, чекмарком, active/completed стейтами</li>
+    <li><strong>Финальный тест</strong> — заблокирован (серый) / разблокирован (жёлтый) / пройден (зелёный)</li>
+    <li><strong>⚙️ Редактировать контент</strong> — открывает admin-панель</li>
+  </ul>
+</div>
+
+<div class="card card-blue">
+  <h4>Мобильная навигация</h4>
+  <p>На экранах &lt;900px сайдбар скрывается и заменяется мобильным header с бургер-меню. Мобильное меню — выдвижная панель слева с overlay. Навигация идентична десктопной.</p>
+</div>
+
+<!-- ===== 05 ===== -->
+<h2 class="section-title" id="s5"><span class="sec-num">05</span> Управление состоянием (State)</h2>
+
+<div class="card">
+  <h3>Глобальный объект state</h3>
+  <pre><code><span class="kw">let</span> state = {
+  currentView: <strong>'welcome'</strong>,   <span class="cm">// Какой экран показан</span>
+  currentSection: <strong>0</strong>,          <span class="cm">// Индекс текущего раздела (0-13)</span>
+  completed: [],               <span class="cm">// Массив ID пройденных разделов ['s1','s2',...]</span>
+  testAnswers: {},             <span class="cm">// {индекс_вопроса: выбранный_ответ}</span>
+  testStarted: false,          <span class="cm">// Тест запущен</span>
+  testFinished: false,         <span class="cm">// Тест завершён</span>
+  testScore: 0,                <span class="cm">// Количество правильных ответов</span>
+  testTime: 0,                 <span class="cm">// Время прохождения (мс)</span>
+  testStartTime: null,         <span class="cm">// Timestamp старта</span>
+  testCurrentQ: 0,             <span class="cm">// Текущий вопрос (0-19)</span>
+  checklistState: {},          <span class="cm">// {'d0_0': true, 'd1_2': false, ...}</span>
+};</code></pre>
+  <p>State полностью сериализуется в <code>localStorage</code> при каждом изменении. Это позволяет сохранить прогресс между сессиями браузера. При загрузке страницы <code>loadState()</code> восстанавливает state из localStorage через <code>Object.assign()</code> — новые поля (добавленные в обновлениях) получают дефолтные значения.</p>
+</div>
+
+<!-- ===== 06 ===== -->
+<h2 class="section-title" id="s6"><span class="sec-num">06</span> Контент — 14 разделов</h2>
+
+<div class="card">
+  <p>Контент разбит на 4 части по тематическому принципу. Каждый раздел — это отдельная функция <code>s1()</code>...<code>s14()</code>, которая возвращает HTML-строку. Функции вызываются через <code>getSectionContent(idx)</code> с switch.</p>
+
+  <table>
+    <thead><tr><th>Ф-ция</th><th>Раздел</th><th>Часть</th><th>Компоненты</th></tr></thead>
+    <tbody>
+      <tr><td><code>s1()</code></td><td>О компании</td><td>1. ОРГАНИЗАЦИЯ</td><td>value-grid (ценности), timeline (история), info-card (формат работы), alert-box</td></tr>
+      <tr><td><code>s2()</code></td><td>Команда и роли</td><td>1. ОРГАНИЗАЦИЯ</td><td>info-card ×3 (роли), warning-box (блокеры)</td></tr>
+      <tr><td><code>s3()</code></td><td>Клиентский портфель</td><td>1. ОРГАНИЗАЦИЯ</td><td>value-grid (масштаб клиентов), tag-pill (конфигурации), alert-box (NDA)</td></tr>
+      <tr><td><code>s4()</code></td><td>Технологический стек</td><td>1. ОРГАНИЗАЦИЯ</td><td>info-card ×3 (1С, интеграции, инфра), tag-pill, value-grid (перспектива)</td></tr>
+      <tr><td><code>s5()</code></td><td>Управление задачами</td><td>2. ПРОЦЕССЫ</td><td>kanban-table (11 стадий), check-box (DOR, DOD)</td></tr>
+      <tr><td><code>s6()</code></td><td>Трекинг времени</td><td>2. ПРОЦЕССЫ</td><td>info-card (статусы), value-grid (учитывается/не учитывается)</td></tr>
+      <tr><td><code>s7()</code></td><td>Коммуникация</td><td>2. ПРОЦЕССЫ</td><td>info-card ×3 (каналы, EOD), eod-block (шаблон)</td></tr>
+      <tr><td><code>s8()</code></td><td>ИИ-инструменты</td><td>2. ПРОЦЕССЫ</td><td>info-card ×3 (Cursor, Claude, GPT-4), value-grid (собственные решения), alert-box</td></tr>
+      <tr><td><code>s9()</code></td><td>Инфраструктура и безопасность</td><td>3. ИНФРА... И СРЕДА</td><td>info-card (demo/prod контуры, доступы, безопасность, NDA Gateway)</td></tr>
+      <tr><td><code>s10()</code></td><td>Финансы</td><td>3. ИНФРА... И СРЕДА</td><td>info-card ×3 (модели работы, документооборот, сотрудникам)</td></tr>
+      <tr><td><code>s11()</code></td><td>Глоссарий</td><td>3. ИНФРА... И СРЕДА</td><td>glossary-grid (37 терминов)</td></tr>
+      <tr><td><code>s12()</code></td><td>FAQ</td><td>4. ОНБОРДИНГ</td><td>accordion (9 вопросов-ответов)</td></tr>
+      <tr><td><code>s13()</code></td><td>Чек-лист первой недели</td><td>4. ОНБОРДИНГ</td><td>checklist-group ×4 (День 1...День 4-5), warning-box</td></tr>
+      <tr><td><code>s14()</code></td><td>План адаптации 7-30-60</td><td>4. ОНБОРДИНГ</td><td>adapt-grid ×3 (карточки 7/30/60 дней), info-box</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="tip"><span>💡</span><span>Для добавления нового раздела нужно: добавить элемент в массив <code>SECTIONS[]</code>, создать функцию <code>s15()</code>, добавить case в <code>getSectionContent()</code>, обновить число прогресса (с 14 на 15).</span></div>
+
+<!-- ===== 07 ===== -->
+<h2 class="section-title" id="s7"><span class="sec-num">07</span> Система тестирования (20 вопросов)</h2>
+
+<div class="card">
+  <h3>Структура вопроса</h3>
+  <pre><code>{ q: <strong>'Текст вопроса'</strong>, opts: [<strong>'Вариант А'</strong>, <strong>'Вариант Б'</strong>, <strong>'Вариант В'</strong>], ans: <strong>1</strong> }
+<span class="cm">// ans — индекс правильного ответа (0, 1 или 2)</span></code></pre>
+
+  <h3>Логика теста</h3>
+  <ul class="checklist">
+    <li>Тест доступен <strong>только после прочтения всех 14 разделов</strong> (completed.length >= 14)</li>
+    <li>При старте запускается таймер, ответы обнуляются</li>
+    <li>Навигация: назад/вперёд по вопросам, ответ обязателен для перехода</li>
+    <li>Прогресс-бар показывает все 20 вопросов (серый → жёлтый → зелёный/красный)</li>
+    <li>По завершении — подсчёт: минимум 16/20 (80%) для прохождения</li>
+    <li>При провале — можно повторить (retryTest) или сбросить всё (resetAll)</li>
+    <li>При успехе — конфетти 🎉 + кнопка «Начать заново»</li>
+  </ul>
+</div>
+
+<!-- ===== 08 ===== -->
+<h2 class="section-title" id="s8"><span class="sec-num">08</span> Admin-панель (редактирование контента)</h2>
+
+<div class="card">
+  <p>Admin-панель встроена прямо в страницу — кнопка <strong>⚙️ Редактировать контент</strong> внизу сайдбара. Открывается как модальное окно поверх контента.</p>
+
+  <h4>Три вкладки:</h4>
+  <table>
+    <thead><tr><th>Вкладка</th><th>Функциональность</th></tr></thead>
+    <tbody>
+      <tr><td><strong>📖 Разделы</strong></td><td>Список всех 14 разделов. Клик → открывается textarea с HTML-контентом. Можно редактировать, сохранить, посмотреть оригинал. Изменённые разделы помечаются зелёным бейджем.</td></tr>
+      <tr><td><strong>🧠 Тест</strong></td><td>Список всех 20 вопросов. Клик → три поля: текст вопроса, варианты ответов (по одному на строку), номер правильного ответа. Можно сохранить или удалить кастом.</td></tr>
+      <tr><td><strong>📝 История</strong></td><td>Лог всех изменений с датой и описанием (максимум 50 записей).</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Кнопки действий:</h4>
+  <ul class="checklist">
+    <li><strong>📥 Экспорт JSON</strong> — скачивает файл со всеми кастомными изменениями</li>
+    <li><strong>📤 Импорт JSON</strong> — загружает JSON-файл с изменениями поверх текущих</li>
+    <li><strong>🗑 Сбросить изменения (N)</strong> — удаляет все кастомные правки, возвращает стандартный контент</li>
+    <li><strong>🔄 Сбросить прогресс</strong> — сбрасывает прохождение (не трогает кастомный контент)</li>
+    <li><strong>✕ Закрыть</strong> — закрывает панель, возвращает на главную</li>
+  </ul>
+</div>
+
+<div class="card card-yellow">
+  <h4>Как это работает технически</h4>
+  <p>Кастомный контент хранится в <code>localStorage</code> под ключом <code>onboarding-aytilab-custom</code>. Это объект <code>{'s1': 'HTML...', 'q3': {q:'...',opts:[...],ans:1}, ...}</code>.</p>
+  <p>В конце JavaScript-кода стоит перехват:</p>
+  <pre><code><span class="kw">var</span> _originalGetSectionContent = getSectionContent;
+getSectionContent = <span class="kw">function</span>(idx) {
+  <span class="kw">var</span> custom = <span class="fn">getCustomContent</span>();
+  <span class="kw">if</span> (custom[<strong>'s'</strong> + (idx+1)]) <span class="kw">return</span> custom[<strong>'s'</strong> + (idx+1)];
+  <span class="kw">return</span> <span class="fn">_originalGetSectionContent</span>(idx);
+};</code></pre>
+  <p>То есть: если для раздела есть кастомный контент в localStorage — он подставляется вместо стандартного. Если кастома нет — используется функция <code>s1()...s14()</code>.</p>
+</div>
+
+<div class="tip"><span>💡</span><span><strong>Workflow для совместной работы:</strong> ответственный редактирует через admin-панель → нажимает «Экспорт JSON» → сохраняет файл → отправляет разработчику → разработчик переносит изменения прямо в код функций s1()...s14() → пушит на GitHub → все пользователи видят обновление.</span></div>
+
+<!-- ===== 09 ===== -->
+<h2 class="section-title" id="s9"><span class="sec-num">09</span> localStorage — ключи и данные</h2>
+
+<div class="card">
+  <table>
+    <thead><tr><th>Ключ</th><th>Тип</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td><code>onboarding-aytilab-v2</code></td><td>JSON → state</td><td>Полное состояние: текущий view, прогресс, ответы, чек-лист</td></tr>
+      <tr><td><code>onboarding-aytilab-custom</code></td><td>JSON → object</td><td>Кастомные изменения разделов и вопросов</td></tr>
+      <tr><td><code>onboarding-aytilab-changelog</code></td><td>JSON → array</td><td>История изменений (до 50 записей)</td></tr>
+    </tbody>
+  </table>
+  <div class="warn"><span>⚠️</span><span><strong>Важно:</strong> localStorage привязан к конкретному домену. Если URL сайта изменится (другой домен, HTTP вместо HTTPS) — все данные потеряются. Для переноса данных используйте Экспорт/Импорт JSON.</span></div>
+</div>
+
+<!-- ===== 10 ===== -->
+<h2 class="section-title" id="s10"><span class="sec-num">10</span> Чек-лист первой недели</h2>
+
+<div class="card">
+  <p>Чек-лист (раздел s13) — интерактивный. Состоит из 4 групп по дням:</p>
+  <table>
+    <thead><tr><th>День</th><th>Пункты</th></tr></thead>
+    <tbody>
+      <tr><td><strong>День 1</strong></td><td>RDP-доступ, Bitrix24, Telegram, Notion</td></tr>
+      <tr><td><strong>День 2</strong></td><td>Знакомство с Bitrix24, 1С:Конфигуратор, формат EOD</td></tr>
+      <tr><td><strong>День 3</strong></td><td>Первая задача, Code Review, первый EOD</td></tr>
+      <tr><td><strong>День 4–5</strong></td><td>Самостоятельная работа, EOD, участие в чатах</td></tr>
+    </tbody>
+  </table>
+  <p>Состояние чек-листа хранится в <code>state.checklistState</code> (ключи формата <code>d0_0</code>, <code>d1_2</code>). Клик на пункт переключает checked/unchecked.</p>
+</div>
+
+<!-- ===== 11 ===== -->
+<h2 class="section-title" id="s11"><span class="sec-num">11</span> Адаптивная вёрстка и мобильная версия</h2>
+
+<div class="card">
+  <h4>Брейкпоинты</h4>
+  <table>
+    <thead><tr><th>Ширина</th><th>Изменения</th></tr></thead>
+    <tbody>
+      <tr><td><strong>&lt;900px</strong></td><td>Сайдбар скрыт, появляется мобильный header с бургер-меню. Мобильное меню — выдвижная панель слева (280px) с overlay. Bottom-action на всю ширину. Адапт-сетка → 1 колонка.</td></tr>
+      <tr><td><strong>&lt;480px</strong></td><td>Все сетки → 1 колонка (kanban, glossary, values). Заголовок приветствия уменьшается до 22px.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Печать</h4>
+  <p>При <code>@media print</code> скрываются sidebar, header, bottom-action, кнопки. Контент растягивается на всю ширину, фон белый.</p>
+</div>
+
+<!-- ===== 12 ===== -->
+<h2 class="section-title" id="s12"><span class="sec-num">12</span> Деплой и GitHub Pages</h2>
+
+<div class="card">
+  <h4>Как работает деплой</h4>
+  <ul class="checklist">
+    <li>Репозиторий: <a href="https://github.com/Antisakrum2004/onboarding">Antisakrum2004/onboarding</a></li>
+    <li>Ветка: <code>main</code></li>
+    <li>Файл: <code>index.html</code> в корне репозитория</li>
+    <li>GitHub Pages настроен на ветку <code>main</code>, папка <code>/ (root)</code></li>
+    <li>URL: <a href="https://antisakrum2004.github.io/onboarding/">antisakrum2004.github.io/onboarding/</a></li>
+    <li>Обновление: <code>git push origin main</code> → через 30-60 секунд сайт обновляется</li>
+  </ul>
+
+  <h4>Настройка GitHub Pages (если нужно пересоздать)</h4>
+  <pre><code><span class="cm">// 1. Зайти в репозиторий → Settings → Pages</span>
+<span class="cm">// 2. Source: Deploy from a branch</span>
+<span class="cm">// 3. Branch: main</span>
+<span class="cm">// 4. Folder: / (root)</span>
+<span class="cm">// 5. Save → подождать минуту</span></code></pre>
+</div>
+
+<!-- ===== 13 ===== -->
+<h2 class="section-title" id="s13"><span class="sec-num">13</span> Известные ограничения и особенности</h2>
+
+<div class="card">
+  <ul class="checklist">
+    <li><strong>Нет серверной части</strong> — всё работает в браузере. Нельзя собрать аналитику «кто прошёл онбординг» без сторонних сервисов.</li>
+    <li><strong>localStorage ≈ 5-10 МБ</strong> — если контент станет очень большим, могут быть проблемы. На практике для текстового онбординга этого более чем достаточно.</li>
+    <li><strong>Нет версионирования контента</strong> — если стандартный контент в коде изменится, а у пользователя старый localStorage с кастомом — кастом останется поверх. Сброс решает проблему.</li>
+    <li><strong>Все в одном файле</strong> — при ~1000 строк это нормально, но если контент будет расти (30+ разделов), стоит рассмотреть вынос данных в отдельный JSON-файл и подгрузку через fetch.</li>
+    <li><strong>Тест доступен только после всех 14 разделов</strong> — это сделано намеренно, чтобы сотрудник точно прочитал весь материал. Можно изменить порог в функции <code>navigate()</code>.</li>
+    <li><strong>Кастомные изменения через admin — localStorage</strong> — то есть каждый пользователь видит только свои правки. Для глобальных изменений нужно пушить в код. Это оговорено в UI admin-панели.</li>
+    <li><strong>Unicode эмодзи</strong> — используются escape-последовательности вида <code>\u{1F3E2}</code> в JS. Это работает во всех современных браузерах, но при редактировании кода нужно быть аккуратным — не заменять их на символы, иначе можно сломать кодировку.</li>
+  </ul>
+</div>
+
+<!-- ===== 14 ===== -->
+<h2 class="section-title" id="s14"><span class="sec-num">14</span> Гайд по внесению изменений</h2>
+
+<div class="card card-yellow">
+  <h4>🔧 Как изменить текст раздела</h4>
+  <p>Найти функцию <code>s1()</code>...<code>s14()</code> (поиск по названию раздела или номеру). Текст — это HTML-строка, возвращаемая функцией. Можно использовать любые HTML-теги из списка компонентов (info-card, value-grid, timeline и т.д.).</p>
+  <pre><code><span class="cm">// Пример — изменить раздел «О компании» (s1):</span>
+<span class="kw">function</span> <span class="fn">s1</span>() {
+  <span class="kw">return</span> <strong>'&lt;h3&gt;Новый заголовок&lt;/h3&gt;'
+    + '&lt;p&gt;Новый текст&lt;/p&gt;'</strong>;
+}</code></pre>
+</div>
+
+<div class="card card-yellow">
+  <h4>➕ Как добавить новый раздел</h4>
+  <pre><code><span class="cm">// 1. Добавить в массив SECTIONS (после s14):</span>
+{id:<strong>'s15'</strong>, num:<strong>15</strong>, part:<strong>4</strong>, emoji:<strong>'\u{1F4C4}'</strong>, title:<strong>'Новый раздел'</strong>, short:<strong>'Новое'</strong>}
+
+<span class="cm">// 2. Обновить прогресс: 14 → 15 везде (renderSidebar, navigate)</span>
+<span class="cm">//    - "0 из 14" → "0 из 15"</span>
+<span class="cm">//    - "completed.length&lt;14" → "completed.length&lt;15"</span>
+
+<span class="cm">// 3. Создать функцию:</span>
+<span class="kw">function</span> <span class="fn">s15</span>() { <span class="kw">return</span> <strong>'&lt;h3&gt;Контент&lt;/h3&gt;&lt;p&gt;...&lt;/p&gt;'</strong>; }
+
+<span class="cm">// 4. Добавить case в getSectionContent():</span>
+<span class="kw">case 14</span>: <span class="kw">return</span> <span class="fn">s15</span>();
+
+<span class="cm">// 5. Закоммитить и пушить</span></code></pre>
+</div>
+
+<div class="card card-yellow">
+  <h4>❓ Как добавить/изменить вопрос теста</h4>
+  <pre><code><span class="cm">// В массиве QUESTIONS:</span>
+{
+  q: <strong>'Текст вопроса?'</strong>,
+  opts: [<strong>'Вариант А'</strong>, <strong>'Вариант Б'</strong>, <strong>'Вариант В'</strong>],
+  ans: <strong>1</strong>  <span class="cm">// Индекс правильного (0 = первый, 1 = второй, 2 = третий)</span>
+}
+
+<span class="cm">// Также обновить: "20 вопросов" → "21 вопрос" в UI</span></code></pre>
+</div>
+
+<div class="card card-yellow">
+  <h4>🎨 Как изменить цветовую тему</h4>
+  <pre><code><span class="cm">// Всё в блоке :root в начале CSS:</span>
+:root {
+  <span class="kw">--yellow</span>: <strong>#F5C327</strong>;     <span class="cm">// Меняем основной акцент</span>
+  <span class="kw">--black</span>: <strong>#1A1A1A</strong>;      <span class="cm">// Меняем цвет текста</span>
+  <span class="kw">--page-bg</span>: <strong>#F4F4F2</strong>;    <span class="cm">// Меняем фон</span>
+  <span class="cm">// ... и так далее</span>
+}</code></pre>
+</div>
+
+<div class="card card-yellow">
+  <h4>🧹 Как сбросить данные пользователя</h4>
+  <p>В консоли браузера (F12 → Console):</p>
+  <pre><code>localStorage.removeItem(<strong>'onboarding-aytilab-v2'</strong>);
+localStorage.removeItem(<strong>'onboarding-aytilab-custom'</strong>);
+localStorage.removeItem(<strong>'onboarding-aytilab-changelog'</strong>);
+location.reload();</code></pre>
+</div>
+
+<!-- ===== 15 ===== -->
+<h2 class="section-title" id="s15"><span class="sec-num">15</span> Возможные улучшения</h2>
+
+<div class="card">
+  <table>
+    <thead><tr><th>Улучшение</th><th>Сложность</th><th>Описание</th></tr></thead>
+    <tbody>
+      <tr><td>Вынос контента в JSON</td><td>Средняя</td><td>Загрузка разделов через fetch() из отдельного JSON-файла. Упростит редактирование нетехническими людьми.</td></tr>
+      <tr><td>Аналитика прохождения</td><td>Средняя</td><td>Отправка событий (пройден раздел, сдан тест) в Google Analytics или самописный backend.</td></tr>
+      <tr><td>Система версий контента</td><td>Средняя</td><td>При обновлении кода проверять версию — если устарела, показать уведомление «контент обновлён, сбросьте прогресс».</td></tr>
+      <tr><td>Редактор WYSIWYG</td><td>Высокая</td><td>Интеграция contenteditable или библиотеки типа Quill вместо textarea с HTML.</td></tr>
+      <tr><td>Множественные языки</td><td>Средняя</td><td>i18n через объект с переводами. Селектор языка в header.</td></tr>
+      <tr><td>Тёмная тема</td><td>Низкая</td><td>Переключатель light/dark через CSS-переменные + media query prefers-color-scheme.</td></tr>
+      <tr><td>Экспорт в PDF</td><td>Низкая</td><td>Кнопка «Распечатать» → window.print() уже работает через @media print.</td></tr>
+      <tr><td>Дополнительные вопросы в тест</td><td>Низкая</td><td>Просто добавить элементы в массив QUESTIONS[].</td></tr>
+      <tr><td>Система оценки сложности</td><td>Средняя</td><td>Вес вопросов, адаптивный тест — сложные вопросы если легко идёт.</td></tr>
+      <tr><td>Интеграция с Bitrix24 API</td><td>Высокая</td><td>Автоматическое создание задач по чек-листу онбординга в Bitrix24 нового сотрудника.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div style="text-align:center;padding:40px 0 20px;color:var(--gray-muted);font-family:var(--mono);font-size:11px">
+  Документация создана 07.04.2025 · Проект «Онбординг 1С АйтиЛаб» v1.0
+</div>
+
+</div>
+</body>
+</html>
