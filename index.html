@@ -251,6 +251,43 @@ a{color:var(--yellow-hover);text-decoration:none}
 
 /* ===== WELCOME ===== */
 .welcome{text-align:center;padding:60px 20px;animation:fadeIn .4s ease}
+.nav-home{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 18px;cursor:pointer;transition:var(--transition);font-size:14px;color:var(--black);font-weight:700;border-left:2px solid transparent;margin-left:8px;border-radius:0;border-bottom:0.5px solid var(--gray-border)}
+.nav-home:hover{background:var(--yellow-bg)}
+.nav-home.active{background:var(--yellow-bg);border-left-color:var(--yellow)}
+.nav-home svg{width:18px;height:18px;flex-shrink:0}
+.nav-admin{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 18px;cursor:pointer;transition:var(--transition);font-size:12px;color:var(--gray-muted);border-left:2px solid transparent;margin-left:8px;margin-top:8px;border-top:0.5px solid var(--gray-border)}
+.nav-admin:hover{background:var(--page-bg);color:var(--black)}
+.nav-admin.active{background:var(--page-bg);color:var(--black);border-left-color:var(--gray-muted)}
+/* ===== ADMIN MODE ===== */
+.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center}
+.admin-panel{background:var(--white);border-radius:var(--radius);padding:28px;max-width:720px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.admin-panel h2{font-size:20px;font-weight:800;color:var(--black);margin-bottom:4px}
+.admin-panel h3{font-size:14px;font-weight:700;color:var(--black);margin:16px 0 8px}
+.admin-panel textarea{width:100%;min-height:100px;border:1px solid var(--gray-border);border-radius:var(--radius-sm);padding:10px;font-family:var(--mono);font-size:11px;resize:vertical;color:var(--black);line-height:1.5}
+.admin-panel textarea:focus{outline:none;border-color:var(--yellow)}
+.admin-section-item{padding:12px;border:0.5px solid var(--gray-border);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:var(--transition)}
+.admin-section-item:hover{border-color:var(--yellow)}
+.admin-section-item.selected{border-color:var(--yellow);background:var(--yellow-bg)}
+.admin-section-label{font-size:12px;font-weight:600;color:var(--black);margin-bottom:2px}
+.admin-btn{padding:7px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:var(--transition);font-family:var(--font)}
+.admin-btn-save{background:var(--yellow);color:var(--black)}
+.admin-btn-save:hover{background:var(--yellow-hover)}
+.admin-btn-cancel{background:var(--page-bg);color:var(--black);border:1px solid var(--gray-border)}
+.admin-btn-cancel:hover{border-color:var(--gray-body)}
+.admin-btn-export{background:var(--page-bg);color:var(--black);border:1px solid var(--gray-border)}
+.admin-btn-export:hover{border-color:var(--yellow)}
+.admin-btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.admin-btn-danger:hover{background:var(--red);color:var(--white)}
+.admin-info{font-size:11px;color:var(--gray-muted);margin-top:6px;line-height:1.5}
+.admin-tabs{display:flex;gap:6px;margin-bottom:16px}
+.admin-tab{padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--gray-border);background:var(--white);color:var(--gray-body);transition:var(--transition)}
+.admin-tab.active{background:var(--yellow);color:var(--black);border-color:var(--yellow)}
+.admin-tab:hover{border-color:var(--yellow)}
+.admin-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.admin-changelog{font-size:11px;color:var(--gray-muted);padding:10px;background:var(--page-bg);border-radius:var(--radius-sm);margin-top:12px;max-height:150px;overflow-y:auto}
+.admin-changelog-item{padding:4px 0;border-bottom:0.5px solid var(--gray-border)}
+.admin-changelog-item:last-child{border-bottom:none}
+.admin-counter{font-family:var(--mono);font-size:10px;color:var(--gray-muted);background:var(--page-bg);padding:2px 8px;border-radius:var(--radius-tag)}
 .welcome-icon{font-size:56px;margin-bottom:16px}
 .welcome h1{font-size:28px;font-weight:800;color:var(--black);margin-bottom:8px}
 .welcome p{color:var(--gray-body);font-size:14px;max-width:460px;margin:0 auto 32px;line-height:1.7}
@@ -449,6 +486,7 @@ function saveState(){
 function navigate(view,sectionIndex){
   if(view==='section'){state.currentView='section';state.currentSection=sectionIndex!==undefined?sectionIndex:state.currentSection;}
   else if(view==='welcome'){state.currentView='welcome';}
+  else if(view==='admin'){state.currentView='admin';}
   else if(view==='test'){if(state.completed.length<14)return;state.currentView='test';if(!state.testStarted){state.testStarted=true;state.testStartTime=Date.now();state.testAnswers={};state.testCurrentQ=0;}}
   else if(view==='results'){state.currentView='results';}
   saveState();render();window.scrollTo(0,0);
@@ -502,7 +540,10 @@ function renderSidebar(){
   document.getElementById('progressText').textContent=c+' из 14';
   document.getElementById('progressFill').style.width=pct+'%';
 
-  var html='';var lastPart=0;
+  var html='';
+  var isHome=state.currentView==='welcome';
+  html+='<div class="nav-home'+(isHome?' active':'')+'" onclick="navigate(\'welcome\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>\u{1F3E0} Главная</span></div>';
+  var lastPart=0;
   SECTIONS.forEach(function(sec,i){
     if(sec.part!==lastPart){
       lastPart=sec.part;
@@ -519,6 +560,7 @@ function renderSidebar(){
   html+='<div class="nav-group-title" style="margin-top:12px">\u0424\u0418\u041D\u0410\u041B\u042C\u041D\u042B\u0419 \u0422\u0415\u0421\u0422</div>';
   html+='<div class="'+testCls+'" onclick="'+(allDone?"navigate('test')":'')+'"><div class="nav-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div><span class="nav-emoji">\u{1F4DD}</span><span>Тест (20 вопросов)</span></div>';
 
+  html+='<div class="nav-admin" onclick="openAdmin()"><span>\u2699\uFE0F Редактировать контент</span></div>';
   document.getElementById('sidebarNav').innerHTML=html;
   document.getElementById('mobileSidebarNav').innerHTML=html;
 }
@@ -526,6 +568,7 @@ function renderSidebar(){
 function renderContent(){
   var area=document.getElementById('contentArea');
   if(state.currentView==='welcome')area.innerHTML=renderWelcome();
+  else if(state.currentView==='admin'){area.innerHTML='';openAdminPanel();}
   else if(state.currentView==='section')area.innerHTML=getSectionHTML(state.currentSection);
   else if(state.currentView==='test')area.innerHTML=renderTest();
   else if(state.currentView==='results')area.innerHTML=renderResults();
@@ -546,7 +589,8 @@ function renderBottomAction(){
   }else if(state.currentView==='results'){
     var passed=state.testScore>=16;bar.style.display='flex';
     bar.innerHTML=passed?'<div></div><button class="btn btn-secondary" onclick="resetAll()">Начать заново</button>':'<div></div><div style="display:flex;gap:10px"><button class="btn btn-secondary" onclick="resetAll()">Сбросить прогресс</button><button class="btn btn-danger" onclick="retryTest()">Попробовать снова</button></div>';
-  }else{bar.style.display='none';}
+  }else if(state.currentView==='admin'){bar.style.display='none';}
+  else{bar.style.display='none';}
 }
 
 function renderWelcome(){
@@ -717,6 +761,275 @@ function launchConfetti(){
     container.appendChild(piece);
   }
 }
+
+// ========== ADMIN MODE ==========
+var adminState={tab:'sections',selectedSection:null,editContent:''};
+
+function getCustomContent(){
+  try{var s=localStorage.getItem('onboarding-aytilab-custom');if(s)return JSON.parse(s);}catch(e){}
+  return {};
+}
+function saveCustomContent(data){
+  try{localStorage.setItem('onboarding-aytilab-custom',JSON.stringify(data));}catch(e){}
+}
+function addChangelog(msg){
+  try{var cl=JSON.parse(localStorage.getItem('onboarding-aytilab-changelog')||'[]');cl.unshift({msg:msg,date:new Date().toISOString()});if(cl.length>50)cl=cl.slice(0,50);localStorage.setItem('onboarding-aytilab-changelog',JSON.stringify(cl));}catch(e){}
+}
+function getChangelog(){
+  try{return JSON.parse(localStorage.getItem('onboarding-aytilab-changelog')||'[]');}catch(e){return [];}
+}
+
+function openAdmin(){
+  navigate('admin');
+}
+
+function openAdminPanel(){
+  adminState={tab:'sections',selectedSection:null,editContent:''};
+  var custom=getCustomContent();
+  var changes=Object.keys(custom).length;
+  var overlay=document.createElement('div');
+  overlay.className='admin-overlay';
+  overlay.id='adminOverlay';
+  overlay.onclick=function(e){if(e.target===overlay)closeAdmin();};
+  renderAdminContent(overlay);
+  document.body.appendChild(overlay);
+}
+
+function renderAdminContent(overlay){
+  if(!overlay)overlay=document.getElementById('adminOverlay');
+  if(!overlay)return;
+  var custom=getCustomContent();
+  var changes=Object.keys(custom).length;
+  var cl=getChangelog();
+  var html='<div class="admin-panel">';
+  html+='<h2>\\u2699\\uFE0F Редактирование контента</h2>';
+  html+='<p class="admin-info">Здесь можно просматривать и корректировать текст разделов. Изменения сохраняются локально в браузере и применяются поверх стандартного контента.</p>';
+  // Tabs
+  html+='<div class="admin-tabs">';
+  html+='<div class="admin-tab'+(adminState.tab==='sections'?' active':'')+'" onclick="adminTabSwitch(\\'sections\\')">\\u{1F4D6} Разделы</div>';
+  html+='<div class="admin-tab'+(adminState.tab==='questions'?' active':'')+'" onclick="adminTabSwitch(\\'questions\\')">\\u{1F9E0} Тест</div>';
+  html+='<div class="admin-tab'+(adminState.tab==='history'?' active':'')+'" onclick="adminTabSwitch(\\'history\\')">\\u{1F4DD} История</div>';
+  html+='</div>';
+
+  if(adminState.tab==='sections'){
+    html+=renderSectionsTab(custom);
+  }else if(adminState.tab==='questions'){
+    html+=renderQuestionsTab(custom);
+  }else if(adminState.tab==='history'){
+    html+=renderHistoryTab(cl);
+  }
+
+  // Actions
+  html+='<div class="admin-actions">';
+  html+='<button class="admin-btn admin-btn-export" onclick="exportContent()">\\u{1F4E5} Экспорт JSON</button>';
+  html+='<label class="admin-btn admin-btn-export" style="position:relative">\\u{1F4E4} Импорт JSON<input type="file" accept=".json" style="position:absolute;opacity:0;width:0;height:0" onchange="importContent(event)"></label>';
+  if(changes>0){
+    html+='<button class="admin-btn admin-btn-danger" onclick="resetCustom()">\\u{1F5D1} Сбросить изменения ('+changes+')</button>';
+  }
+  html+='<button class="admin-btn admin-btn-cancel" onclick="closeAdmin()">\\u2715 Закрыть</button>';
+  html+='</div>';
+  html+='</div>';
+  overlay.innerHTML=html;
+}
+
+function renderSectionsTab(custom){
+  var html='<h3>Разделы Welcome Book</h3>';
+  SECTIONS.forEach(function(sec,i){
+    var hasCustom=custom['s'+(i+1)];
+    html+='<div class="admin-section-item'+(adminState.selectedSection===i?' selected':'')+'" onclick="selectAdminSection('+i+')">';
+    html+='<div class="admin-section-label">'+sec.emoji+' '+sec.title+(hasCustom?' <span class="admin-counter">\\u2705 изменён</span>':'')+'</div>';
+    html+='<div class="admin-info">'+sec.short+'</div>';
+    html+='</div>';
+  });
+  if(adminState.selectedSection!==null){
+    var idx=adminState.selectedSection;
+    var key='s'+(idx+1);
+    var currentCustom=custom[key]||'';
+    var originalFn=getSectionContent(idx);
+    var tmp=document.createElement('div');tmp.innerHTML=originalFn;
+    var originalText=tmp.textContent||tmp.innerText||'';
+    html+='<h3>\\u270F\\uFE0F Редактирование: '+SECTIONS[idx].title+'</h3>';
+    html+='<div class="admin-info" style="margin-bottom:8px">Замените содержимое раздела. Оставьте пустым — будет использоваться стандартный текст. HTML поддерживается.</div>';
+    html+='<textarea id="adminEditor" oninput="adminState.editContent=this.value" placeholder="Введите новый текст раздела...">'+escapeHtml(currentCustom)+'</textarea>';
+    html+='<div class="admin-actions" style="margin-top:12px">';
+    html+='<button class="admin-btn admin-btn-save" onclick="saveSectionContent('+idx+')">\\u{1F4BE} Сохранить раздел</button>';
+    html+='<button class="admin-btn admin-btn-cancel" onclick="previewOriginal('+idx+')" title="Показать оригинал">\\u{1F441} Оригинал</button>';
+    html+='</div>';
+    html+='<div id="originalPreview"></div>';
+  }
+  return html;
+}
+
+function renderQuestionsTab(custom){
+  var html='<h3>Вопросы теста ('+QUESTIONS.length+')</h3>';
+  QUESTIONS.forEach(function(q,i){
+    var qKey='q'+i;
+    var hasCustom=custom[qKey];
+    html+='<div class="admin-section-item" onclick="selectAdminQuestion('+i+')">';
+    html+='<div class="admin-section-label">'+(i+1)+'. '+q.q+(hasCustom?' <span class="admin-counter">\\u2705</span>':'')+'</div>';
+    html+='<div class="admin-info">'+q.opts.join(' / ')+'</div>';
+    html+='</div>';
+  });
+  if(adminState.selectedQuestion!==undefined){
+    var idx=adminState.selectedQuestion;
+    var qKey='q'+idx;
+    var cur=custom[qKey]||null;
+    var orig=cur?{q:QUESTIONS[idx].q,opts:QUESTIONS[idx].opts,ans:QUESTIONS[idx].ans}:null;
+    var editing=cur||QUESTIONS[idx];
+    html+='<h3>\\u270F\\uFE0F Вопрос '+(idx+1)+'</h3>';
+    html+='<div class="admin-section-item" style="cursor:default"><label class="admin-section-label">Текст вопроса</label><textarea id="adminQText" style="margin-top:6px" oninput="adminState.editQText=this.value">'+editing.q+'</textarea></div>';
+    html+='<div class="admin-section-item" style="cursor:default"><label class="admin-section-label">Варианты ответов (по одному на строку)</label><textarea id="adminQOpts" style="margin-top:6px" oninput="adminState.editQOpts=this.value">'+editing.opts.join('\\n')+'</textarea></div>';
+    html+='<div class="admin-section-item" style="cursor:default"><label class="admin-section-label">Номер правильного ответа (0, 1, 2...)</label><input type="number" id="adminQAns" min="0" value="'+editing.ans+'" style="margin-top:6px;padding:8px;border:1px solid var(--gray-border);border-radius:var(--radius-sm);font-size:13px;width:60px"></div>';
+    html+='<div class="admin-actions" style="margin-top:12px">';
+    html+='<button class="admin-btn admin-btn-save" onclick="saveQuestionContent('+idx+')">\\u{1F4BE} Сохранить вопрос</button>';
+    if(cur){html+='<button class="admin-btn admin-btn-danger" onclick="deleteQuestionCustom('+idx+')">Удалить кастом</button>';}
+    html+='</div>';
+  }
+  return html;
+}
+
+function renderHistoryTab(cl){
+  var html='<h3>История изменений</h3>';
+  if(cl.length===0){
+    html+='<div class="admin-info">Изменений пока нет.</div>';
+  }else{
+    html+='<div class="admin-changelog">';
+    cl.forEach(function(item){
+      var d=new Date(item.date);
+      var ds=d.toLocaleDateString('ru-RU')+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+      html+='<div class="admin-changelog-item"><strong>'+ds+'</strong> — '+escapeHtml(item.msg)+'</div>';
+    });
+    html+='</div>';
+  }
+  return html;
+}
+
+function adminTabSwitch(tab){
+  adminState.tab=tab;
+  adminState.selectedSection=null;
+  adminState.selectedQuestion=undefined;
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+}
+
+function selectAdminSection(idx){
+  adminState.selectedSection=idx;
+  adminState.selectedQuestion=undefined;
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+}
+
+function selectAdminQuestion(idx){
+  adminState.selectedQuestion=idx;
+  adminState.selectedSection=null;
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+}
+
+function saveSectionContent(idx){
+  var editor=document.getElementById('adminEditor');
+  if(!editor)return;
+  var content=editor.value.trim();
+  var custom=getCustomContent();
+  var key='s'+(idx+1);
+  if(content){custom[key]=content;addChangelog('Изменён раздел: '+SECTIONS[idx].title);}
+  else{delete custom[key];addChangelog('Сброшен раздел: '+SECTIONS[idx].title);}
+  saveCustomContent(custom);
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+}
+
+function saveQuestionContent(idx){
+  var qText=document.getElementById('adminQText');
+  var qOpts=document.getElementById('adminQOpts');
+  var qAns=document.getElementById('adminQAns');
+  if(!qText||!qOpts||!qAns)return;
+  var custom=getCustomContent();
+  custom['q'+idx]={q:qText.value.trim(),opts:qOpts.value.trim().split('\\n').filter(function(s){return s.trim();}),ans:parseInt(qAns.value)||0};
+  addChangelog('Изменён вопрос '+(idx+1));
+  saveCustomContent(custom);
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+}
+
+function deleteQuestionCustom(idx){
+  var custom=getCustomContent();
+  delete custom['q'+idx];
+  addChangelog('Сброшен вопрос '+(idx+1));
+  saveCustomContent(custom);
+  adminState.selectedQuestion=undefined;
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+}
+
+function previewOriginal(idx){
+  var el=document.getElementById('originalPreview');
+  if(!el)return;
+  var originalFn=getSectionContent(idx);
+  var tmp=document.createElement('div');tmp.innerHTML=originalFn;
+  var text=tmp.textContent||tmp.innerText||'';
+  el.innerHTML='<div class="admin-section-item" style="cursor:default;margin-top:8px"><div class="admin-section-label">\\u{1F4C4} Оригинальный текст</div><div style="font-size:12px;color:var(--gray-body);margin-top:6px;max-height:200px;overflow-y:auto;white-space:pre-wrap">'+escapeHtml(text)+'</div></div>';
+}
+
+function exportContent(){
+  var custom=getCustomContent();
+  var data=JSON.stringify({version:'1.0',date:new Date().toISOString(),sections:custom},null,2);
+  var blob=new Blob([data],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='onboarding-custom-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  URL.revokeObjectURL(url);
+  addChangelog('Экспорт контента');
+}
+
+function importContent(event){
+  var file=event.target.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(data.sections){
+        var existing=getCustomContent();
+        Object.keys(data.sections).forEach(function(k){existing[k]=data.sections[k];});
+        saveCustomContent(existing);
+        addChangelog('Импорт контента из файла: '+file.name);
+        var overlay=document.getElementById('adminOverlay');
+        if(overlay)renderAdminContent(overlay);
+      }
+    }catch(err){alert('Ошибка чтения файла: '+err.message);}
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+function resetCustom(){
+  if(!confirm('Сбросить все пользовательские изменения? Стандартный контент будет восстановлен.'))return;
+  localStorage.removeItem('onboarding-aytilab-custom');
+  addChangelog('Сброс всех пользовательских изменений');
+  adminState={tab:'sections',selectedSection:null,editContent:''};
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+}
+
+function closeAdmin(){
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay){overlay.remove();}
+  state.currentView='welcome';
+  saveState();render();
+}
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ========== CUSTOM CONTENT INJECTION ==========
+var _originalGetSectionContent=getSectionContent;
+getSectionContent=function(idx){
+  var custom=getCustomContent();
+  var key='s'+(idx+1);
+  if(custom[key])return custom[key];
+  return _originalGetSectionContent(idx);
+};
 
 // ========== INIT ==========
 if(!state.testCurrentQ)state.testCurrentQ=0;
