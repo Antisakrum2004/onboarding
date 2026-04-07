@@ -803,7 +803,8 @@ function renderAdminContent(overlay){
   var cl=getChangelog();
   var html='<div class="admin-panel">';
   html+='<h2>\u2699\uFE0F Редактирование контента</h2>';
-  html+='<p class="admin-info">Здесь можно просматривать и корректировать текст разделов. Изменения сохраняются локально в браузере и применяются поверх стандартного контента.</p>';
+  html+='<p class="admin-info">Здесь можно просматривать и корректировать текст разделов и вопросов. Изменения сохраняются локально в браузере (localStorage) и применяются поверх стандартного контента.</p>';
+  html+='<div class="info-box" style="background:var(--yellow-bg);border-color:rgba(245,195,39,.3)"><span>\u{1F4A1}</span><span style="color:var(--black)"><strong>Как применить изменения для всех:</strong> нажмите \u00ABЭкспорт JSON\u00BB, сохраните файл, затем замените его в репозитории <code>Antisakrum2004/onboarding</code> на GitHub. После push изменения появятся на сайте.</span></div>';
   // Tabs
   html+='<div class="admin-tabs">';
   html+='<div class="admin-tab'+(adminState.tab==='sections'?' active':'')+'" onclick="adminTabSwitch(\'sections\')">\u{1F4D6} Разделы</div>';
@@ -826,6 +827,7 @@ function renderAdminContent(overlay){
   if(changes>0){
     html+='<button class="admin-btn admin-btn-danger" onclick="resetCustom()">\u{1F5D1} Сбросить изменения ('+changes+')</button>';
   }
+  html+='<button class="admin-btn admin-btn-cancel" onclick="resetProgress()">\u{1F504} Сбросить прогресс</button>';
   html+='<button class="admin-btn admin-btn-cancel" onclick="closeAdmin()">\u2715 Закрыть</button>';
   html+='</div>';
   html+='</div>';
@@ -1009,6 +1011,15 @@ function resetCustom(){
   adminState={tab:'sections',selectedSection:null,editContent:''};
   var overlay=document.getElementById('adminOverlay');
   if(overlay)renderAdminContent(overlay);
+}
+
+function resetProgress(){
+  if(!confirm('Сбросить прогресс прохождения (не затрагивает кастомный контент)?'))return;
+  state.completed=[];state.testAnswers={};state.testStarted=false;state.testFinished=false;state.testScore=0;state.testTime=0;state.testStartTime=null;state.testCurrentQ=0;state.checklistState={};
+  saveState();addChangelog('Сброс прогресса прохождения');
+  var overlay=document.getElementById('adminOverlay');
+  if(overlay)renderAdminContent(overlay);
+  render();
 }
 
 function closeAdmin(){
